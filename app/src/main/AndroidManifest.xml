@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.bptracker">
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- https://github.com/codepath/android_guides/wiki/Starting-Background-Services
+    <uses-permission android:name="android.permission.WAKE_LOCK" />-->
+
+    <application
+        android:name=".TrackerApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="false"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/app_name" />
+        <activity android:name=".IntroActivity" />
+        <activity android:name=".LauncherActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity" />
+        <!-- android:theme="@style/AppTheme.NoActionBar" -->
+        <activity
+            android:name=".DeviceActivity"
+            android:label="@string/title_activity_device" />
+
+        <provider
+            android:name=".data.DeviceProvider"
+            android:authorities="@string/content_authority"
+            android:exported="false"
+            android:syncable="true" />
+
+        <service android:name=".service.LoadDevicesService" android:exported="false" />
+        <service android:name=".service.DeviceEventService" android:exported="false"/>
+
+        <receiver android:name=".receiver.BootCompletedReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+        <receiver android:name=".service.LoadDevicesService$TestReceiver">
+            <intent-filter>
+                <action android:name="net.superblock.pushover.NEW_MESSAGE" />
+            </intent-filter>
+        </receiver>-->
+
+    </application>
+
+</manifest>

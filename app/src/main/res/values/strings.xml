@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">BP Tracker</string>
+
+    <string name="intro_text">Intro text for BP Tracker</string>
+
+    <string name="content_authority">com.bptracker</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_login">Login</string>
+    <string name="action_login_short">Login</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="login_to_particle">Particle Login</string>
+
+    <string name="forgot_password_uri">https://www.particle.io/forgot-password</string>
+
+    <string name="title_activity_intro">IntroActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="set_up_tracker">Get Started</string>
+
+    <string name="login_failed_msg">Could not login to particle.io: %1$s </string>
+
+    <string name="title_activity_launcher">LauncherActivity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="your_devices">Your devices</string>
+
+
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="unnamed_device">(Unnamed device)</string>
+    <string name="title_activity_device">DeviceActivity</string>
+    <string name="action_refresh">Refresh</string>
+
+</resources>
