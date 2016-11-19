@@ -70,6 +70,7 @@ public class DeviceEventService extends Service {
         @Override
         public Void callApi(ParticleCloud cloud) throws ParticleCloudException, IOException {
 
+
             long subscriptionId = cloud.subscribeToMyDevicesEvents("te", new ParticleEventHandler() {
                 @Override
                 public void onEventError(Exception e) {

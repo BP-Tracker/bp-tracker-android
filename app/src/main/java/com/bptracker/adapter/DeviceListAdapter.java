@@ -13,7 +13,6 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.bptracker.R;
-import com.bptracker.data.DeviceContract;
 import com.bptracker.fragment.DeviceListFragment;
 
 import io.particle.android.sdk.cloud.ParticleCloudSDK;

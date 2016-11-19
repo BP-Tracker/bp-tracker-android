@@ -3,18 +3,18 @@ package com.bptracker;
 import android.database.Cursor;
 import android.test.AndroidTestCase;
 
-import com.bptracker.data.DeviceContract;
+import com.bptracker.data.BptContract;
 
 /**
  * Author: Derek Benda
  */
-public class TestDeviceProvider extends AndroidTestCase {
+public class BptProvider extends AndroidTestCase {
 
     public void assetRecordsExistInProvider() {
 
 
         Cursor cursor = mContext.getContentResolver().query(
-                DeviceContract.DeviceEntry.CONTENT_URI,
+                BptContract.DeviceEntry.CONTENT_URI,
                 null,
                 null,
                 null,

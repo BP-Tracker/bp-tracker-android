@@ -1,23 +1,21 @@
 package com.bptracker.data;
 
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentResolver;
 import android.util.Log;
 
 
-public class DeviceProviderTest extends ProviderTestCase2<DeviceProvider> {
+public class BptProviderTest extends ProviderTestCase2<BptProvider> {
 
-    private static final String LOG_TAG = DeviceProviderTest.class.getSimpleName();
+    private static final String LOG_TAG = BptProviderTest.class.getSimpleName();
 
     MockContentResolver contentResolver;
 
-    public DeviceProviderTest() {
-        super(DeviceProvider.class, "com.bptracker");
+    public BptProviderTest() {
+        super(BptProvider.class, "com.bptracker");
     }
 
     @Override
@@ -39,7 +37,7 @@ public class DeviceProviderTest extends ProviderTestCase2<DeviceProvider> {
 
         ContentValues c = createDeviceValues();
 
-        Uri deviceUri = DeviceContract.DeviceEntry.CONTENT_URI;
+        Uri deviceUri = BptContract.DeviceEntry.CONTENT_URI;
         Uri recordUri = contentResolver.insert(deviceUri, c);
 
         Cursor cursor = contentResolver.query(
@@ -57,11 +55,11 @@ public class DeviceProviderTest extends ProviderTestCase2<DeviceProvider> {
     static ContentValues createDeviceValues() {
         ContentValues v = new ContentValues();
         //weatherValues.put(WeatherContract.WeatherEntry.COLUMN_LOC_KEY, locationRowId);
-        v.put(DeviceContract.DeviceEntry.COLUMN_DEVICE_TYPE, "ELECTRON");
-        v.put(DeviceContract.DeviceEntry.COLUMN_DEVICE_NAME, "A NAME");
-        v.put(DeviceContract.DeviceEntry.COLUMN_IS_ACTIVE, 1);
-        v.put(DeviceContract.DeviceEntry.COLUMN_IS_CONNECTED, 0);
-        v.put(DeviceContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID, "AADDE34234");
+        v.put(BptContract.DeviceEntry.COLUMN_DEVICE_TYPE, "ELECTRON");
+        v.put(BptContract.DeviceEntry.COLUMN_DEVICE_NAME, "A NAME");
+        v.put(BptContract.DeviceEntry.COLUMN_IS_ACTIVE, 1);
+        v.put(BptContract.DeviceEntry.COLUMN_IS_CONNECTED, 0);
+        v.put(BptContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID, "AADDE34234");
 
         return v;
     }

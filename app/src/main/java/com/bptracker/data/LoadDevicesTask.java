@@ -15,6 +15,7 @@ import io.particle.android.sdk.cloud.ParticleCloudException;
 import io.particle.android.sdk.cloud.ParticleDevice;
 import io.particle.android.sdk.utils.Async;
 import io.particle.android.sdk.utils.TLog;
+import com.bptracker.data.BptContract.DeviceEntry;
 
 /**
  * Author: Derek Benda
@@ -51,21 +52,21 @@ public class LoadDevicesTask extends Async.ApiWork<ParticleCloud, Void>{
         // 'expire' devices that no longer exist
 
         ContentValues activeFlagValue = new ContentValues();
-        activeFlagValue.put(DeviceContract.DeviceEntry.COLUMN_IS_ACTIVE, 0);
+        activeFlagValue.put(DeviceEntry.COLUMN_IS_ACTIVE, 0);
 
-        Uri uri = DeviceContract.DeviceEntry.CONTENT_URI;
+        Uri uri = DeviceEntry.CONTENT_URI;
         Cursor c = this.context.getContentResolver().query(uri,
-                new String[] {DeviceContract.DeviceEntry._ID},
+                new String[] {DeviceEntry._ID},
                 null, null, null);
 
         while (c.moveToNext()) {
             long savedDeviceId = c.getLong(0);
             if (!deviceIdMap.containsKey(savedDeviceId)) {
                 _log.d("device does not exist, updating is_active flag to false");
-                Uri updateUri = DeviceContract.DeviceEntry.buildDeviceUri(savedDeviceId);
+                Uri updateUri = DeviceEntry.buildDeviceUri(savedDeviceId);
                 int rowUpdated
                         = this.context.getContentResolver().update(uri, activeFlagValue,
-                            DeviceContract.DeviceEntry._ID + " = ?",
+                            DeviceEntry._ID + " = ?",
                             new String[]{ Long.toString(savedDeviceId)  }
                             );
                 if (rowUpdated <= 0) {
@@ -98,20 +99,20 @@ public class LoadDevicesTask extends Async.ApiWork<ParticleCloud, Void>{
         String cloudDeviceId = device.getID().toUpperCase();
 
         ContentValues v = new ContentValues();
-        v.put(DeviceContract.DeviceEntry.COLUMN_DEVICE_NAME, device.getName());
-        v.put(DeviceContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID, cloudDeviceId);
-        v.put(DeviceContract.DeviceEntry.COLUMN_IS_ACTIVE, 1);
-        v.put(DeviceContract.DeviceEntry.COLUMN_IS_CONNECTED, device.isConnected() ? 1 : 0);
-        v.put(DeviceContract.DeviceEntry.COLUMN_SOFTWARE_NAME, ""); // TODO
-        v.put(DeviceContract.DeviceEntry.COLUMN_SOFTWARE_VERSION, ""); // TODO
+        v.put(DeviceEntry.COLUMN_DEVICE_NAME, device.getName());
+        v.put(DeviceEntry.COLUMN_CLOUD_DEVICE_ID, cloudDeviceId);
+        v.put(DeviceEntry.COLUMN_IS_ACTIVE, 1);
+        v.put(DeviceEntry.COLUMN_IS_CONNECTED, device.isConnected() ? 1 : 0);
+        v.put(DeviceEntry.COLUMN_SOFTWARE_NAME, ""); // TODO
+        v.put(DeviceEntry.COLUMN_SOFTWARE_VERSION, ""); // TODO
 
         String deviceType = PARTICLE_DEVICE_TYPE_MAP.get(device.getDeviceType());
-        v.put(DeviceContract.DeviceEntry.COLUMN_DEVICE_TYPE, deviceType != null ? deviceType : "" );
+        v.put(DeviceEntry.COLUMN_DEVICE_TYPE, deviceType != null ? deviceType : "" );
 
         Cursor c = this.context.getContentResolver().query(
-                DeviceContract.DeviceEntry.CONTENT_URI,
-                new String[]{ DeviceContract.DeviceEntry._ID },
-                DeviceContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID + " = ?",
+                DeviceEntry.CONTENT_URI,
+                new String[]{ DeviceEntry._ID },
+                DeviceEntry.COLUMN_CLOUD_DEVICE_ID + " = ?",
                 new String[]{cloudDeviceId},
                 null
         );
@@ -121,7 +122,7 @@ public class LoadDevicesTask extends Async.ApiWork<ParticleCloud, Void>{
 
             _log.d(device.getID() + " exists, updating record [deviceId=" + deviceId + "]");
 
-            uri = DeviceContract.DeviceEntry.buildDeviceUri(deviceId);
+            uri = DeviceEntry.buildDeviceUri(deviceId);
 
             int rowsUpdated = context.getContentResolver().update(uri, v, null, null);
             if (rowsUpdated <= 0) {
@@ -131,13 +132,12 @@ public class LoadDevicesTask extends Async.ApiWork<ParticleCloud, Void>{
         }else{ // insert new record
 
             _log.d("inserting device " + device.getID() );
-            uri = context.getContentResolver().insert(
-                    DeviceContract.DeviceEntry.CONTENT_URI, v);
+            uri = context.getContentResolver().insert(DeviceEntry.CONTENT_URI, v);
         }
 
         c.close();
 
-        return DeviceContract.DeviceEntry.getDeviceIdFromUri(uri);
+        return DeviceEntry.getDeviceIdFromUri(uri);
     }
 
     private static final Map<ParticleDevice.ParticleDeviceType, String> PARTICLE_DEVICE_TYPE_MAP =

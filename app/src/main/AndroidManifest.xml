@@ -31,7 +31,7 @@
             android:label="@string/title_activity_device" />
 
         <provider
-            android:name=".data.DeviceProvider"
+            android:name=".data.BptProvider"
             android:authorities="@string/content_authority"
             android:exported="false"
             android:syncable="true" />

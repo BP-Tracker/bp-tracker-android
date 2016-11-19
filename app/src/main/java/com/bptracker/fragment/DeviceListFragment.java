@@ -20,7 +20,7 @@ import android.widget.ListView;
 
 import com.bptracker.R;
 import com.bptracker.adapter.DeviceListAdapter;
-import com.bptracker.data.DeviceContract;
+import com.bptracker.data.BptContract;
 import com.bptracker.service.LoadDevicesService;
 
 import io.particle.android.sdk.utils.TLog;
@@ -65,7 +65,7 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
                     _log.d("Device entry ID = " + id);
 
                     ((Callbacks) getActivity())
-                            .onDeviceSelected(DeviceContract.DeviceEntry.buildDeviceUri(id));
+                            .onDeviceSelected(BptContract.DeviceEntry.buildDeviceUri(id));
                 }
             }
         });
@@ -101,11 +101,11 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
         _log.d("onCreateLoader called");
 
         return new CursorLoader(getActivity(),
-                DeviceContract.DeviceEntry.buildDevicesUri(),
+                BptContract.DeviceEntry.buildDeviceUri(),
                 DEVICE_COLUMNS,
                 null,
                 null,
-                DeviceContract.DeviceEntry.COLUMN_DEVICE_NAME + " ASC");
+                BptContract.DeviceEntry.COLUMN_DEVICE_NAME + " ASC");
     }
 
     // LoaderManager.LoaderCallbacks
@@ -155,13 +155,13 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
 
     // Specify the columns we need.
     private static final String[] DEVICE_COLUMNS = {
-            DeviceContract.DeviceEntry._ID,
-            DeviceContract.DeviceEntry.COLUMN_DEVICE_NAME,
-            DeviceContract.DeviceEntry.COLUMN_DEVICE_TYPE,
-            DeviceContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID,
-            DeviceContract.DeviceEntry.COLUMN_IS_CONNECTED,
-            DeviceContract.DeviceEntry.COLUMN_SOFTWARE_NAME,
-            DeviceContract.DeviceEntry.COLUMN_SOFTWARE_VERSION,
+            BptContract.DeviceEntry._ID,
+            BptContract.DeviceEntry.COLUMN_DEVICE_NAME,
+            BptContract.DeviceEntry.COLUMN_DEVICE_TYPE,
+            BptContract.DeviceEntry.COLUMN_CLOUD_DEVICE_ID,
+            BptContract.DeviceEntry.COLUMN_IS_CONNECTED,
+            BptContract.DeviceEntry.COLUMN_SOFTWARE_NAME,
+            BptContract.DeviceEntry.COLUMN_SOFTWARE_VERSION,
     };
 
 
