@@ -1,0 +1,3 @@
+[submodule "libs/spark-sdk-android"]
+	path = libs/spark-sdk-android
+	url = git://github.com/BP-Tracker/spark-sdk-android.git
