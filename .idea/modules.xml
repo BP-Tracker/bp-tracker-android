@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BPTracker.iml" filepath="$PROJECT_DIR$/BPTracker.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libs/spark-sdk-android/cloudsdk/cloudsdk.iml" filepath="$PROJECT_DIR$/libs/spark-sdk-android/cloudsdk/cloudsdk.iml" />
     </modules>
   </component>
 </project>
