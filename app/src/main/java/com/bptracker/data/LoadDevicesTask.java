@@ -96,7 +96,7 @@ public class LoadDevicesTask extends Async.ApiWork<ParticleCloud, Void>{
         _log.d("saveToProvider called on cloud device ID: " + device.getID());
 
         Uri uri;
-        String cloudDeviceId = device.getID().toUpperCase();
+        String cloudDeviceId = device.getID();
 
         ContentValues v = new ContentValues();
         v.put(DeviceEntry.COLUMN_DEVICE_NAME, device.getName());

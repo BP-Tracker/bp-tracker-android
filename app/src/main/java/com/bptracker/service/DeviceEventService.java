@@ -3,15 +3,23 @@ package com.bptracker.service;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 
 import com.bptracker.MainActivity;
 import com.bptracker.R;
 import com.bptracker.TrackerApplication;
+import com.bptracker.data.BptContract;
+import com.bptracker.firmware.DataTypeException;
+import com.bptracker.firmware.Util;
 import com.bptracker.receiver.BootCompletedReceiver;
 
 import java.io.IOException;
@@ -24,15 +32,23 @@ import io.particle.android.sdk.cloud.ParticleEventHandler;
 import io.particle.android.sdk.utils.Async;
 import io.particle.android.sdk.utils.TLog;
 
+import com.bptracker.data.BptContract.DeviceEventEntry;
+import com.bptracker.data.BptContract.DeviceEntry;
+import com.bptracker.util.IntentUtil;
+import com.bptracker.firmware.DataType.CloudEvent;
+import com.bptracker.firmware.DataType.EventType;
+
 // Monitors particle cloud events
 public class DeviceEventService extends Service {
+
+    private static final String BPT_PREFIX = "bpt:";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         _log.d("onStartCommand called");
 
         // This is required so the service can continue to listen to cloud events
-        serviceNotification = new ServiceNotification("title", "message", MainActivity.class);
+        serviceNotification = new ServiceNotification("BP Tracker", "Tracking events from the cloud", MainActivity.class);
         serviceNotification.sendNotification();
 
         TrackerApplication app = (TrackerApplication) this.getApplicationContext();
@@ -63,25 +79,104 @@ public class DeviceEventService extends Service {
 
     private class SubscribeToEventsTask extends Async.ApiWork<ParticleCloud, Void>{
 
+
+        private final String[] DEVICE_COLUMNS = {
+                BptContract.DeviceEntry.COLUMN_DEVICE_NAME,
+        };
+
+        // These indices are tied to DEVICE_COLUMNS.
+        public static final int COL_DEVICE_NAME = 0;
+
+
         public SubscribeToEventsTask(Context context){
-            this.context = context;
+            this.mContext = context;
         }
 
         @Override
         public Void callApi(ParticleCloud cloud) throws ParticleCloudException, IOException {
 
 
-            long subscriptionId = cloud.subscribeToMyDevicesEvents("te", new ParticleEventHandler() {
+            long subscriptionId = cloud.subscribeToMyDevicesEvents(null, new ParticleEventHandler() {
                 @Override
                 public void onEventError(Exception e) {
-                    _log.d("onEventError called");
-
+                    _log.d("onEventError called"); //TODO
                 }
 
+                /**
+                 * Called when a device event is received from the particle cloud. This method
+                 * inserts data for content providers and also broadcasts IntentUtil.ACTION_DEVICE_EVENT
+                 * and if applicable IntentUtil.ACTION_BPT_EVENT intents.
+                 * @param eventName The event name that was recieved
+                 * @param particleEvent The event object
+                 */
                 @Override
                 public void onEvent(String eventName, ParticleEvent particleEvent) {
                     _log.d("onEvent called [eventName=" + eventName
-                            + "] [cloudDeviceId=" + particleEvent.deviceId + "]");
+                            + "] [cloudDeviceId=" + particleEvent.deviceId + "] [particleData="
+                            + particleEvent.dataPayload + "]");
+
+                    String eventData = particleEvent.dataPayload;
+                    String cloudDeviceId = particleEvent.deviceId;
+
+                    ContentValues v = new ContentValues();
+                    v.put(DeviceEventEntry.COLUMN_CLOUD_DEVICE_ID, cloudDeviceId);
+                    v.put(DeviceEventEntry.COLUMN_PUBLISH_DATE, particleEvent.publishedAt.getTime());
+                    v.put(DeviceEventEntry.COLUMN_EVENT_DATA, eventData);
+                    v.put(DeviceEventEntry.COLUMN_EVENT_NAME, eventName);
+
+                    Uri uri = mContext.getContentResolver().insert(DeviceEventEntry.CONTENT_URI, v);
+
+                    _log.d("inserted event [" + eventName + "]: "  + uri.toString() );
+
+
+                    Intent i = new Intent(IntentUtil.ACTION_DEVICE_EVENT, uri);
+                    i.putExtra(IntentUtil.EXTRA_FROM_BPT_DEVICE, eventName.startsWith(BPT_PREFIX) );
+
+                    i.putExtra(IntentUtil.EXTRA_DEVICE_ID, cloudDeviceId);
+                    i.putExtra(IntentUtil.EXTRA_EVENT_NAME, eventName);
+                    i.putExtra(IntentUtil.EXTRA_EVENT_DATA, eventData);
+
+                    String deviceName = getDeviceName(cloudDeviceId);
+
+                    if(!TextUtils.isEmpty(deviceName)){
+                        i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, deviceName);
+                    }else{
+                        _log.w("Device name is empty for cloud device ID: " + cloudDeviceId);
+                    }
+
+                    // private broadcast
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
+
+                    if(CloudEvent.fromName(eventName) == CloudEvent.BPT_EVENT){
+                       // also broadcast the ACTION_BPT_EVENT intent ...
+
+                        try {
+
+                            EventType event = Util.getBptEventType(eventName, eventData);
+                            String parsedEventData = Util.getBptEventData(eventName, eventData);
+
+                            long id = DeviceEventEntry.getIdFromUri(uri);
+                            Uri bptEntryUri = DeviceEventEntry.buildBptDeviceEventUri(cloudDeviceId, id);
+
+
+                            Intent bptIntent = new Intent(IntentUtil.ACTION_BPT_EVENT, bptEntryUri);
+                            bptIntent.setAction(IntentUtil.ACTION_BPT_EVENT);
+                            bptIntent.putExtras(i);
+
+                            bptIntent.putExtra(IntentUtil.EXTRA_EVENT_NAME, parsedEventData); // event_code is parsed out from the event data
+                            bptIntent.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, event);
+
+                            //TODO: send local broadcast instead ???
+                            //LocalBroadcastManager.getInstance(mContext).sendBroadcast(bptIntent);
+                            mContext.sendBroadcast(bptIntent, IntentUtil.PERMISSION_RECEIVE_EVENTS);
+
+
+                        }catch (DataTypeException e){
+                            _log.e("Cannot send ACTION_BPT_EVENT broadcast: " + e.getMessage());
+                        }
+
+                    }
+
                 }
             });
             _log.d("Subscribed to cloud [subscriptionId= " + subscriptionId + "]");
@@ -89,8 +184,25 @@ public class DeviceEventService extends Service {
             return null;
         }
 
+        @Nullable
+        private String getDeviceName(String cloudDeviceId) {
+
+            String n = null;
+            Uri uri = DeviceEntry.buildCloudDeviceUri(cloudDeviceId);
+
+            Cursor c = mContext.getContentResolver().query(uri,
+                    DEVICE_COLUMNS, null, null, null);
+
+            if(c.moveToFirst()){
+                n = c.getString(COL_DEVICE_NAME);
+            }
+            c.close();
+
+            return n;
+        }
+
         @Override
-        public void onSuccess(Void aVoid) {
+        public void onSuccess(Void aVoid) { //TODO?
 
         }
 
@@ -98,12 +210,12 @@ public class DeviceEventService extends Service {
         public void onFailure(ParticleCloudException e) {
             _log.d("onFailure");
             e.printStackTrace();
-            throw new RuntimeException("Cannot subscribe to events from the Particle cloud: "
+            throw new RuntimeException("Cannot subscribe to events from the particle.io cloud: "
                     + e.getBestMessage(), e);
 
         }
 
-        private Context context;
+        private Context mContext;
     }
 
     private class ServiceNotification {
@@ -148,45 +260,5 @@ public class DeviceEventService extends Service {
 
     protected Integer NOTIFICATION_ID = 4566566; // Random int
     private ServiceNotification serviceNotification;
-    private static final TLog _log = TLog.get(BootCompletedReceiver.class);
+    private static final TLog _log = TLog.get(DeviceEventService.class);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*public DeviceEventService() {
-        super("monitor-events-service");
-    }*/
-   /* @Override
-    public void onStart(Intent intent, int startId) {
-        _log.d("onStart called");
-        super.onStart(intent, startId);
-    }*/
-

@@ -13,7 +13,7 @@ import io.particle.android.sdk.utils.TLog;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 10;
 
     static final String DATABASE_NAME = "bptracker.db";
 
@@ -42,7 +42,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         final String SQL_DEVICE_FUNCTION = "CREATE TABLE " + DeviceFunctionCallEntry.TABLE_NAME + " (" +
                 DeviceFunctionCallEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + " INTEGER NOT NULL, " +
+                DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + " TEXT NOT NULL, " +
                 DeviceFunctionCallEntry.COLUMN_FUNCTION_NAME + " TEXT NOT NULL, " +
                 DeviceFunctionCallEntry.COLUMN_FUNCTION_ARGS + " TEXT, " +
                 DeviceFunctionCallEntry.COLUMN_FUNCTION_RETURN + " TEXT, " +
@@ -54,7 +54,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         final String SQL_DEVICE_EVENT = "CREATE TABLE " + DeviceEventEntry.TABLE_NAME + " (" +
                 DeviceEventEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                DeviceEventEntry.COLUMN_CLOUD_DEVICE_ID + " INTEGER NOT NULL, " +
+                DeviceEventEntry.COLUMN_CLOUD_DEVICE_ID + " TEXT NOT NULL, " +
                 DeviceEventEntry.COLUMN_EVENT_NAME + " TEXT NOT NULL, " +
                 DeviceEventEntry.COLUMN_EVENT_DATA + " TEXT, " +
                 DeviceEventEntry.COLUMN_PUBLISH_DATE + " INTEGER, " +

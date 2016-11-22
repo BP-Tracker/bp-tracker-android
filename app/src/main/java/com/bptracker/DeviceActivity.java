@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.bptracker.firmware.DataType;
 import com.bptracker.fragment.DeviceFragment;
 
 import io.particle.android.sdk.utils.TLog;
@@ -31,6 +32,8 @@ public class DeviceActivity extends AppCompatActivity {
 
             DeviceFragment fragment = new DeviceFragment();
             fragment.setArguments(arguments);
+
+
 
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.device_detail_container, fragment)

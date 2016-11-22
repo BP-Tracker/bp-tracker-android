@@ -23,36 +23,6 @@ public class BptContract {
     public static final String PATH_FUNCTION_CALLS = "function-calls";
 
 
-    /** see also valid_bpt_function **/
-    // TODO: test for integrity
-    public static final String EVENT_BPT_EVENT      = "btp:event";
-    public static final String EVENT_BPT_STATE      = "btp:state";
-    public static final String EVENT_BPT_GPS        = "btp:gps";
-    public static final String EVENT_BPT_STATUS     = "btp:status";
-    public static final String EVENT_BPT_DIAG       = "btp:diag";
-    public static final String EVENT_BPT_REGISTER   = "btp:register";
-    public static final String EVENT_BPT_ACK        = "btp:ack";
-    public static final String EVENT_BPT_PROBE      = "btp:probe";
-    public static final String EVENT_BPT_TEST       = "bpt:test";
-    public static final String EVENT_BPT_RESET      = "btp:reset";
-
-
-    // See all valid_bpt_state
-    // TODO: test for integrity
-    public static final int STATE_OFFLINE               = 1;
-    public static final int STATE_DEACTIVATED           = 2;
-    public static final int STATE_RESET                 = 3;
-    public static final int STATE_ARMED                 = 4;
-    public static final int STATE_DISARMED              = 5;
-    public static final int STATE_PANIC                 = 6;
-    public static final int STATE_PAUSED                = 7;
-    public static final int STATE_RESUMED               = 8;
-    public static final int STATE_INTERNAL_ACTIVATED    = 9;
-    public static final int STATE_INTERNAL_SOFT_PANIC   = 10;
-    public static final int STATE_INTERNAL_ONLINE_WAIT  = 11;
-    public static final int STATE_INTERNAL_SLEEP        = 12;
-
-
     public static final class DeviceEntry implements BaseColumns {
 
         public static final Uri CONTENT_URI =
@@ -88,11 +58,17 @@ public class BptContract {
 
         // com.bptracker/devices/cloud-device-id/AFF21323123ACCBCEDFF
         public static String getCloudDeviceIdFromUri(Uri uri) {
-            return uri.getPathSegments().get(3);
+            return uri.getPathSegments().get(2); //TODO: add checks here
         }
 
         public static Uri buildDeviceUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        // com.bptracker/devices/cloud-device-id/*
+        public static Uri buildCloudDeviceUri(String cloudDeviceId) {
+            return CONTENT_URI.buildUpon().appendPath("cloud-device-id")
+                .appendPath(cloudDeviceId).build();
         }
 
         //devices
@@ -209,7 +185,7 @@ public class BptContract {
             return uri;
         }
 
-        //devices/*/bpt-events/#
+        //devices/*/bpt-events/*
         public static Uri buildBptDeviceEventUri(String cloudDeviceId, long deviceEventId) {
 
             Uri uri = buildBptDeviceEventUri(cloudDeviceId);
@@ -226,8 +202,8 @@ public class BptContract {
             return CONTENT_URI;
         }
 
-        //devices/*/bpt-events/#
-        //events/#
+        //devices/*/bpt-events/*
+        //events/*
         public static long getIdFromUri(Uri uri){
 
             String id = uri.getLastPathSegment();  //TODO: error prone

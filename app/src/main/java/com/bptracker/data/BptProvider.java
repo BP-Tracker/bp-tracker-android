@@ -78,13 +78,13 @@ public class BptProvider extends ContentProvider {
 
          //devices/cloud-device-id/*       (device by cloud device id)
          //devices/*/bpt-events            (bpt events by cloud device id)
-         //devices/*/bpt-events/#          (specific bpt event by cloud device id)
+         //devices/*/bpt-events/*          (specific bpt event by cloud device id)
          //devices/*/bpt-function-calls    (all bpt function calls by cloud device id)
          //devices/*/bpt-function-calls/#  (specific btp function call)
 
-         //devices/#                       (device by internal id)
-         //events/#                        (event by id)
-         //function-calls/#                (function call by id)
+         //devices/*                       (device by internal id)
+         //events/*                        (event by id)
+         //function-calls/*                (function call by id)
 
         uriMatcher.addURI(auth, "devices", MATCHER_DEVICES);
         uriMatcher.addURI(auth, "events", MATCHER_EVENTS);
@@ -92,13 +92,13 @@ public class BptProvider extends ContentProvider {
 
         uriMatcher.addURI(auth, "devices/cloud-device-id/*", MATCHER_BY_CLOUD_DEVICE_ID);
         uriMatcher.addURI(auth, "devices/*/bpt-events", MATCHER_BPT_EVENTS);
-        uriMatcher.addURI(auth, "devices/*/bpt-events/#", MATCHER_BPT_EVENTS_ID);
+        uriMatcher.addURI(auth, "devices/*/bpt-events/*", MATCHER_BPT_EVENTS_ID);
         uriMatcher.addURI(auth, "devices/*/bpt-function-calls", MATCHER_BPT_FUNCTION_CALLS);
-        uriMatcher.addURI(auth, "devices/*/bpt-function-calls/#",MATCHER_BPT_FUNCTION_CALLS_ID);
+        uriMatcher.addURI(auth, "devices/*/bpt-function-calls/*", MATCHER_BPT_FUNCTION_CALLS_ID);
 
-        uriMatcher.addURI(auth, "devices/#", MATCHER_BY_DEVICE_ID);
-        uriMatcher.addURI(auth, "events/#", MATCHER_BY_EVENT_ID);
-        uriMatcher.addURI(auth, "function-calls/#", MATCHER_BY_FUNCTION_CALLS_ID);
+        uriMatcher.addURI(auth, "devices/*", MATCHER_BY_DEVICE_ID);
+        uriMatcher.addURI(auth, "events/*", MATCHER_BY_EVENT_ID);
+        uriMatcher.addURI(auth, "function-calls/*", MATCHER_BY_FUNCTION_CALLS_ID);
     }
 
 
@@ -185,10 +185,12 @@ public class BptProvider extends ContentProvider {
         if(match == MATCHER_BY_CLOUD_DEVICE_ID){
 
             String cloudDeviceId = DeviceEntry.getCloudDeviceIdFromUri(uri);
+
             if (cloudDeviceId == null || cloudDeviceId.length() <= 0) {
                 throw new UnsupportedOperationException(
                         "Cannot find cloud device ID from uri:" + uri);
             }
+
 
             c = deviceQueryBuilder.query(databaseHelper.getReadableDatabase(),
                     projection,
@@ -198,6 +200,7 @@ public class BptProvider extends ContentProvider {
                     null,
                     sortOrder
             );
+
             return c;
         }
 
@@ -280,6 +283,8 @@ public class BptProvider extends ContentProvider {
         Cursor c;
         int match = uriMatcher.match(uri);
 
+        _log.d("query on " + uri + " [match=" + match + "]");
+
         String tableName = getTableNameFromUri(uri);
         if(tableName != null){ // simple URIs
 
@@ -321,6 +326,7 @@ public class BptProvider extends ContentProvider {
         return c;
     }
 
+
     @Nullable
     @Override
     public String getType(Uri uri) {
@@ -334,8 +340,24 @@ public class BptProvider extends ContentProvider {
                 return DeviceEntry.CONTENT_ITEM_TYPE;
             case MATCHER_BY_CLOUD_DEVICE_ID:
                 return DeviceEntry.CONTENT_ITEM_TYPE;
+            case MATCHER_EVENTS:
+                return DeviceEventEntry.CONTENT_TYPE;
+            case MATCHER_FUNCTION_CALLS:
+                return DeviceFunctionCallEntry.CONTENT_TYPE;
+            case MATCHER_BPT_EVENTS:
+                return DeviceEventEntry.CONTENT_TYPE;
+            case MATCHER_BPT_EVENTS_ID:
+                return DeviceEventEntry.CONTENT_ITEM_TYPE;
+            case MATCHER_BPT_FUNCTION_CALLS:
+                return DeviceFunctionCallEntry.CONTENT_TYPE;
+            case MATCHER_BPT_FUNCTION_CALLS_ID:
+                return DeviceFunctionCallEntry.CONTENT_ITEM_TYPE;
+            case MATCHER_BY_EVENT_ID:
+                return DeviceEventEntry.CONTENT_ITEM_TYPE;
+            case MATCHER_BY_FUNCTION_CALLS_ID:
+                return DeviceFunctionCallEntry.CONTENT_ITEM_TYPE;
             default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
+                throw new UnsupportedOperationException("Cannot getType because uri is unknown: " + uri);
         }
     }
 

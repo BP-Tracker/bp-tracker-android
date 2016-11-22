@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">BP Tracker</string>
 
+    <string name="perm_receive_bpt_events_label">Receive BP Tracker events</string>
+    <string name="perm_receive_bpt_events_desc">Receive BP Tracker events</string>
+
     <string name="intro_text">Intro text for BP Tracker</string>
 
     <string name="content_authority">com.bptracker</string>
@@ -39,5 +42,7 @@
     <string name="unnamed_device">(Unnamed device)</string>
     <string name="title_activity_device">DeviceActivity</string>
     <string name="action_refresh">Refresh</string>
+
+
 
 </resources>
