@@ -43,9 +43,10 @@
             android:layout_gravity="center" />
     </LinearLayout>
 
-
+    <!--style="@style/BPTrackerButton"-->
     <Button
-        style="@style/BPTrackerButton"
+        android:layout_height="48dp"
+        android:layout_width="256dp"
         android:id="@+id/device_arm_disarm_btn"
         android:text="Arm/Disarm Device"
 

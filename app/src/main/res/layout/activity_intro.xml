@@ -59,8 +59,10 @@
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
+        <!--style="@style/BPTrackerButton"-->
         <Button
-            style="@style/BPTrackerButton"
+            android:layout_height="48dp"
+            android:layout_width="256dp"
             android:id="@+id/set_up_button"
             android:text="@string/set_up_tracker"
 
