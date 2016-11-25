@@ -1,0 +1,79 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.Design.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <!--
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        -->
+    </style>
+
+    <style name="AppTheme.Transparent">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+
+    <!--&lt;!&ndash;<item name="fontPath">@string/header_text_font_name</item>&ndash;&gt;-->
+    <style name="SectionHeader">
+        <item name="android:textSize">24sp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/normal_text_color</item>
+    </style>
+
+
+
+
+<!--
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />-->
+
+
+
+
+    <!--<style name="AppTheme.NoActionBar">-->
+    <!--<item name="windowActionBar">false</item>-->
+    <!--<item name="windowNoTitle">true</item>-->
+    <!--</style>-->
+
+
+    <!--<style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.Light.NoActionBar">-->
+    <!--<item name="android:windowNoTitle">true</item>-->
+    <!--<item name="android:windowBackground">@android:color/transparent</item>-->
+    <!--<item name="android:colorBackgroundCacheHint">@null</item>-->
+    <!--<item name="android:windowIsTranslucent">true</item>-->
+    <!--<item name="android:windowAnimationStyle">@android:style/Animation</item>-->
+    <!--</style>-->
+
+    <!--<style name="FullscreenTheme" parent="AppTheme">-->
+    <!--<item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>-->
+    <!--<item name="android:windowActionBarOverlay">true</item>-->
+    <!--<item name="android:windowBackground">@null</item>-->
+    <!--<item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>-->
+    <!--<item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>-->
+    <!--</style>-->
+
+    <!--<style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">-->
+    <!--<item name="android:background">@color/black_overlay</item>-->
+    <!--</style>-->
+
+    <!--<style name="BPTrackerButton" parent="Widget.AppCompat.Button">-->
+    <!--&lt;!&ndash;<item name="fontPath">@string/bold_text_font_name</item>&ndash;&gt;-->
+    <!--<item name="android:textColor">@drawable/button_text_color_selector</item>-->
+    <!--<item name="android:textSize">@dimen/text_size_medium</item>-->
+    <!--<item name="android:layout_height">48dp</item>-->
+    <!--<item name="android:layout_width">256dp</item>-->
+    <!--<item name="android:layout_centerHorizontal">true</item>-->
+    <!--<item name="android:layout_gravity">center</item>-->
+    <!--</style>-->
+
+</resources>
