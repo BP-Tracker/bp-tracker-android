@@ -2,11 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bptracker">
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.bptracker.permission.RECEIVE_EVENTS" />
 
-    <!-- https://github.com/codepath/android_guides/wiki/Starting-Background-Services
-    <uses-permission android:name="android.permission.WAKE_LOCK" />-->
+    <!--
+    https://github.com/codepath/android_guides/wiki/Starting-Background-Services
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    -->
 
 
     <!--
@@ -15,10 +18,11 @@
         Supported actions: com.bptracker.intent.action.BPT_EVENT
         Supported mime-types: vnd.android.cursor.item/com.bptracker/events
     -->
-    <permission android:name="com.bptracker.permission.RECEIVE_EVENTS"
-        android:label="@string/perm_receive_bpt_events_label"
+    <permission
+        android:name="com.bptracker.permission.RECEIVE_EVENTS"
         android:description="@string/perm_receive_bpt_events_desc"
-        android:protectionLevel="normal"/>
+        android:label="@string/perm_receive_bpt_events_label"
+        android:protectionLevel="normal" />
 
     <application
         android:name=".TrackerApplication"
@@ -39,6 +43,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" />
+
         <!-- android:theme="@style/AppTheme.NoActionBar" -->
         <activity
             android:name=".DeviceActivity"
@@ -50,25 +55,30 @@
             android:exported="false"
             android:syncable="true" />
 
-        <service android:name=".service.LoadDevicesService" android:exported="false" />
-        <service android:name=".service.DeviceEventService" android:exported="false"/>
+        <service
+            android:name=".service.LoadDevicesService"
+            android:exported="false" />
+        <service
+            android:name=".service.DeviceEventService"
+            android:exported="false" />
 
-        <receiver android:name=".receiver.BootCompletedReceiver"
+        <receiver
+            android:name=".receiver.BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".receiver.BptEventReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.bptracker.intent.action.BPT_EVENT" />
 
-       <receiver android:name=".receiver.BptEventReceiver"
-           android:enabled="true"
-           android:exported="false">
-           <intent-filter>
-               <action android:name="com.bptracker.intent.action.BPT_EVENT" />
-               <data android:mimeType="vnd.android.cursor.item/com.bptracker/events"/>
-           </intent-filter>
-
+                <data android:mimeType="vnd.android.cursor.item/com.bptracker/events" />
+            </intent-filter>
         </receiver>
 
         <!--
@@ -76,8 +86,13 @@
             <intent-filter>
                 <action android:name="net.superblock.pushover.NEW_MESSAGE" />
             </intent-filter>
-        </receiver>-->
+        </receiver>
+        -->
 
+        <!-- @style/Theme.AppCompat.Translucent android:theme="@android:style/Theme.Translucent"  -->
+
+        <activity android:name=".SelectStateActivity" android:theme="@style/AppTheme.Transparent"
+            ></activity>
     </application>
 
 </manifest>

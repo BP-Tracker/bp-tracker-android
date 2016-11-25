@@ -17,6 +17,7 @@ Table Of Contents
 - [Requirements](#requirements)
 - [Usage](#usage)
 - [Support & Releases](#support-&-releases)
+- [TODO](#todo)
 - [License](#license)
 
 Intro
@@ -43,6 +44,12 @@ Support and Releases
 -----
 
 No releases yet.
+
+
+Todo
+-----
+
+  Use particle.io's cloudsdk after SSE issue has been resolved (https://github.com/spark/spark-sdk-android/issues/10)
 
 
 License
