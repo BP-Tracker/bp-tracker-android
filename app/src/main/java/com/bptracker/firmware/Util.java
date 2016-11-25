@@ -4,10 +4,11 @@ package com.bptracker.firmware;
  * Author: Derek Benda
  */
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.bptracker.firmware.DataType.CloudEvent;
-import com.bptracker.firmware.DataType.EventType;
+import com.bptracker.firmware.Firmware.CloudEvent;
+import com.bptracker.firmware.Firmware.EventType;
 
 public class Util {
 
@@ -18,7 +19,7 @@ public class Util {
 
 
     // this method strips the event_code from eventData and returns the rest
-    // eventData format: event_code[,data1[,data2..]]
+    // eventData format: event_code,ack_required[,data1[,data2..]]
     public static String getBptEventData(String eventName, String eventData)
         throws DataTypeException {
 
@@ -61,6 +62,19 @@ public class Util {
         }
 
         return e;
+    }
+
+    @Nullable
+    public static String[] getDataElements(EventType eventType, String eventData) { //TODO
+
+        switch (eventType) {
+            case PANIC:
+                return eventData.split(",");
+
+
+        }
+
+        return null;
     }
 
 

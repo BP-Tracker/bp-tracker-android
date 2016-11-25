@@ -14,13 +14,16 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
-import com.bptracker.MainActivity;
 import com.bptracker.R;
 import com.bptracker.TrackerApplication;
 import com.bptracker.data.BptContract;
+import com.bptracker.data.BptContract.DeviceEntry;
+import com.bptracker.data.BptContract.DeviceEventEntry;
+import com.bptracker.firmware.Firmware.CloudEvent;
+import com.bptracker.firmware.Firmware.EventType;
 import com.bptracker.firmware.DataTypeException;
 import com.bptracker.firmware.Util;
-import com.bptracker.receiver.BootCompletedReceiver;
+import com.bptracker.util.IntentUtil;
 
 import java.io.IOException;
 
@@ -32,12 +35,6 @@ import io.particle.android.sdk.cloud.ParticleEventHandler;
 import io.particle.android.sdk.utils.Async;
 import io.particle.android.sdk.utils.TLog;
 
-import com.bptracker.data.BptContract.DeviceEventEntry;
-import com.bptracker.data.BptContract.DeviceEntry;
-import com.bptracker.util.IntentUtil;
-import com.bptracker.firmware.DataType.CloudEvent;
-import com.bptracker.firmware.DataType.EventType;
-
 // Monitors particle cloud events
 public class DeviceEventService extends Service {
 
@@ -48,8 +45,8 @@ public class DeviceEventService extends Service {
         _log.d("onStartCommand called");
 
         // This is required so the service can continue to listen to cloud events
-        serviceNotification = new ServiceNotification("BP Tracker", "Tracking events from the cloud", MainActivity.class);
-        serviceNotification.sendNotification();
+        // serviceNotification = new ServiceNotification("BP Tracker", "Tracking events from the cloud", MainActivity.class);
+        //serviceNotification.sendNotification();
 
         TrackerApplication app = (TrackerApplication) this.getApplicationContext();
 
@@ -126,7 +123,7 @@ public class DeviceEventService extends Service {
 
                     Uri uri = mContext.getContentResolver().insert(DeviceEventEntry.CONTENT_URI, v);
 
-                    _log.d("inserted event [" + eventName + "]: "  + uri.toString() );
+                    _log.d("inserted event (" + eventName + "): "  + uri.toString() );
 
 
                     Intent i = new Intent(IntentUtil.ACTION_DEVICE_EVENT, uri);
@@ -153,6 +150,7 @@ public class DeviceEventService extends Service {
                         try {
 
                             EventType event = Util.getBptEventType(eventName, eventData);
+
                             String parsedEventData = Util.getBptEventData(eventName, eventData);
 
                             long id = DeviceEventEntry.getIdFromUri(uri);
@@ -179,7 +177,7 @@ public class DeviceEventService extends Service {
 
                 }
             });
-            _log.d("Subscribed to cloud [subscriptionId= " + subscriptionId + "]");
+            _log.d("Subscribed to cloud [subscriptionId=" + subscriptionId + "]");
 
             return null;
         }

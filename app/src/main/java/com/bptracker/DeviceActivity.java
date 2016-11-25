@@ -1,22 +1,19 @@
 package com.bptracker;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 
-import com.bptracker.firmware.DataType;
+import com.bptracker.firmware.Firmware;
 import com.bptracker.fragment.DeviceFragment;
+import com.bptracker.util.IntentUtil;
 
 import io.particle.android.sdk.utils.TLog;
 
-public class DeviceActivity extends AppCompatActivity {
+public class DeviceActivity extends Activity {
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,11 +31,25 @@ public class DeviceActivity extends AppCompatActivity {
             fragment.setArguments(arguments);
 
 
-
-            getSupportFragmentManager().beginTransaction()
+            getFragmentManager().beginTransaction()
                     .add(R.id.device_detail_container, fragment)
                     .commit();
         }
+
+
+        Uri uri = Uri.parse("content://com.bptracker/devices/42003b000251353337353037/bpt-events/66");
+        Intent i = new Intent(IntentUtil.ACTION_BPT_EVENT, uri);
+        i.putExtra(IntentUtil.EXTRA_FROM_BPT_DEVICE, true );
+
+        i.putExtra(IntentUtil.EXTRA_DEVICE_ID, "42003b000251353337353037");
+        i.putExtra(IntentUtil.EXTRA_EVENT_NAME, "bpt:event");
+        i.putExtra(IntentUtil.EXTRA_EVENT_DATA, "0,7,7");
+        i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, "Pippy");
+        i.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, Firmware.EventType.STATE_CHANGE);
+
+        sendBroadcast(i, IntentUtil.PERMISSION_RECEIVE_EVENTS);
+
+        _log.d("Send broadcast");
 
     }
 

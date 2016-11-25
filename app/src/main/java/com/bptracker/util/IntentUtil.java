@@ -48,7 +48,7 @@ public class IntentUtil {
     // Is the event originating from the device loaded with the BPT firmware?
     public static final String EXTRA_FROM_BPT_DEVICE = "com.bpt.intent.extra.FROM_BPT_DEVICE";
 
-    // Holds the DataType.Event type (if applicable)
+    // Holds the Firmware.Event type (if applicable)
     public static final String EXTRA_BPT_EVENT_TYPE = "com.bpt.intent.extra.BPT_EVENT_TYPE";
 
 

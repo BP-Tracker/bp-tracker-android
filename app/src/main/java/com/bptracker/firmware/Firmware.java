@@ -9,7 +9,7 @@ import java.util.Map;
  * Author: Derek Benda
  */
 
-public class DataType { /** TODO: double check all codes **/
+public class Firmware { /** TODO: double check all codes **/
 
 
     // NB: the enum's ordinal will not match the state code
@@ -92,7 +92,6 @@ public class DataType { /** TODO: double check all codes **/
         }
 
         private int code;
-        private boolean isPrivate;
 
         EventType(int code){
             this.code = code;

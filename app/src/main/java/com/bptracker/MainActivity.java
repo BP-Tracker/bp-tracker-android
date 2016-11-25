@@ -1,18 +1,18 @@
 package com.bptracker;
 
-import android.app.IntentService;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 
 import com.bptracker.fragment.DeviceListFragment;
 import com.bptracker.service.DeviceEventService;
+import com.bptracker.service.LoadDevicesService;
 import com.bptracker.util.Utils;
 
 import io.particle.android.sdk.utils.TLog;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends Activity
         implements DeviceListFragment.Callbacks {
 
     @Override
@@ -29,6 +29,9 @@ public class MainActivity extends AppCompatActivity
             Intent i = new Intent(this, DeviceEventService.class);
             startService(i);
         }
+
+        //Intent intent = new Intent(this, LoadDevicesService.class);
+        //startService(intent);
 
 
     }

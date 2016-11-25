@@ -1,21 +1,18 @@
 package com.bptracker.fragment;
 
 
+import android.app.Fragment;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.bptracker.R;
 import com.bptracker.data.BptContract;
-import com.bptracker.firmware.DataType;
 
-import io.particle.android.sdk.utils.Funcy;
 import io.particle.android.sdk.utils.TLog;
 
 /**

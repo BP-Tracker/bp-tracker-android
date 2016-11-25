@@ -1,19 +1,12 @@
 package com.bptracker;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import java.util.List;
-
-import io.particle.android.sdk.cloud.ParticleCloud;
-import io.particle.android.sdk.cloud.ParticleCloudSDK;
-import io.particle.android.sdk.cloud.ParticleDevice;
-import io.particle.android.sdk.cloud.SDKGlobals;
-import io.particle.android.sdk.persistance.AppDataStorage;
 import io.particle.android.sdk.utils.TLog;
 
-public class LauncherActivity extends AppCompatActivity {
+public class LauncherActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

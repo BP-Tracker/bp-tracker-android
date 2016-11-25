@@ -1,7 +1,6 @@
 package com.bptracker;
 
 import android.app.Application;
-import android.util.Log;
 
 import io.particle.android.sdk.cloud.ParticleCloud;
 import io.particle.android.sdk.cloud.ParticleCloudSDK;
