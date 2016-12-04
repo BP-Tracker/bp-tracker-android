@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.bptracker.permission.RECEIVE_EVENTS" />
+    <uses-permission android:name="com.bptracker.permission.RECEIVE_DEVICE_EVENTS" />
 
     <!--
     https://github.com/codepath/android_guides/wiki/Starting-Background-Services
@@ -13,16 +14,28 @@
 
 
     <!--
-        com.bptracker.permission.RECEIVE_EVENTS (See IntentUtil)
+        Broadcasts com.bptracker.permission.RECEIVE_EVENTS intents (See IntentUtil)
 
         Supported actions: com.bptracker.intent.action.BPT_EVENT
-        Supported mime-types: vnd.android.cursor.item/com.bptracker/events
+        Supported mime-type: vnd.android.cursor.item/com.bptracker/events
     -->
     <permission
         android:name="com.bptracker.permission.RECEIVE_EVENTS"
         android:description="@string/perm_receive_bpt_events_desc"
         android:label="@string/perm_receive_bpt_events_label"
         android:protectionLevel="normal" />
+
+    <!--
+         Broadcasts com.bptracker.permission.RECEIVE_DEVICE_EVENTS intent (See IntentUtil)
+
+         Supported actions: com.bptracker.intent.action.DEVICE_EVENT
+         Supported mime-type: vnd.android.cursor.item/com.bptracker/events
+    -->
+    <permission
+        android:name="com.bptracker.permission.RECEIVE_DEVICE_EVENTS"
+        android:description="@string/perm_receive_device_events_desc"
+        android:label="@string/perm_receive_device_events_label"
+        android:protectionLevel="signature" />
 
     <application
         android:name=".TrackerApplication"
