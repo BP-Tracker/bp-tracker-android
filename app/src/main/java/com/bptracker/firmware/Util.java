@@ -18,15 +18,20 @@ public class Util {
     }
 
 
-    // this method strips the event_code from eventData and returns the rest
-    // eventData format: event_code,ack_required[,data1[,data2..]]
-    public static String getBptEventData(String eventName, String eventData)
-        throws DataTypeException {
+    /**
+     * Strips the event code from data in a bpt:event event and returns the rest.
+     * Firmware result format: event_code,ack_required[,data1[,data2..]].
+     * @param eventName Event name
+     * @param eventData Event data in its raw form
+     * @throws IllegalArgumentException
+     * @return The parsed data
+     */
+    public static String getBptEventData(String eventName, String eventData) {
 
         String r = "";
 
         if(!isBptEvent(eventName)){
-            throw new DataTypeException(
+            throw new IllegalArgumentException(
                     "getBptEventData can only be called on a BPT_EVENT events: " + eventName);
         }
 
@@ -40,16 +45,15 @@ public class Util {
     }
 
     // eventData format: event_code[,data1[,data2..]]
-    public static EventType getBptEventType(String eventName, String eventData)
-        throws DataTypeException {
+    public static EventType getBptEventType(String eventName, String eventData) {
 
         if(!isBptEvent(eventName)){
-            throw new DataTypeException(
+            throw new IllegalArgumentException(
                     "getBptEventType can only be called on a BPT_EVENT events: " + eventName);
         }
 
         if(TextUtils.isEmpty(eventData)){
-            throw new DataTypeException(eventName + " contains missing or malformed data");
+            throw new IllegalArgumentException(eventName + " contains missing or malformed data");
         }
 
         int sep = eventData.indexOf(",");
@@ -58,7 +62,7 @@ public class Util {
         EventType e = EventType.fromCode(Integer.parseInt(code));
 
         if (e == null) {
-            throw new DataTypeException("bpt event code " + code + " is unknown");
+            throw new IllegalArgumentException("bpt event code " + code + " is unknown");
         }
 
         return e;

@@ -109,6 +109,42 @@ public class Firmware { /** TODO: double check all codes **/
 
 
     @SuppressWarnings({"UnusedDeclaration"})
+    public enum TestInput {
+
+        INPUT_GPS(1),
+        INPUT_AUTO_GPS(2),
+        INPUT_ACCEL_INT(3);
+
+        public int getCode(){
+            return this.code;
+        }
+
+        public static TestInput fromCode(int code){
+            return map.get(code);
+        }
+
+        public static TestInput TestInput(int code){
+            return map.get(code);
+        }
+
+        private int code;
+
+        TestInput(int code){
+            this.code = code;
+        }
+
+        private static SparseArray<TestInput> map = new SparseArray<>();
+
+        static {
+            for(TestInput e : TestInput.values()){
+                map.put(e.code, e);
+            }
+        }
+    }
+
+
+
+    @SuppressWarnings({"UnusedDeclaration"})
     public enum CloudEvent { // BPT events received from the cloud
 
         BPT_EVENT("bpt:event"),
@@ -192,10 +228,19 @@ public class Firmware { /** TODO: double check all codes **/
             return this.name;
         }
 
+
         /**
-         * Returns the Function enum matching the passed in name
-         * @param name
-         * @return the Function enum
+         * Does the function return results in an event with the same name?
+         * @return true if the function returns results in an event, false otherwise
+         */
+        public boolean usesEventForResult(){
+            return this.publishesEvents;
+        }
+
+        /**
+         * Returns the BptApi enum matching the passed in name
+         * @param name the firmware's function name
+         * @return the BptApi enum
          */
         public static Function getFunction(String name){
             return map.get(name);
