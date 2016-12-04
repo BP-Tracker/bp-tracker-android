@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
 import com.bptracker.R;
@@ -21,7 +20,6 @@ import com.bptracker.data.BptContract.DeviceEntry;
 import com.bptracker.data.BptContract.DeviceEventEntry;
 import com.bptracker.firmware.Firmware.CloudEvent;
 import com.bptracker.firmware.Firmware.EventType;
-import com.bptracker.firmware.DataTypeException;
 import com.bptracker.firmware.Util;
 import com.bptracker.util.IntentUtil;
 
@@ -141,37 +139,38 @@ public class DeviceEventService extends Service {
                         _log.w("Device name is empty for cloud device ID: " + cloudDeviceId);
                     }
 
-                    // private broadcast
-                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
+                    mContext.sendBroadcast(i, IntentUtil.PERMISSION_RECEIVE_DEVICE_EVENTS);
+                    //LocalBroadcastManager.getInstance(mContext).sendBroadcast(i);
 
                     if(CloudEvent.fromName(eventName) == CloudEvent.BPT_EVENT){
                        // also broadcast the ACTION_BPT_EVENT intent ...
 
+                        EventType event;
+                        String parsedEventData;
+
                         try {
-
-                            EventType event = Util.getBptEventType(eventName, eventData);
-
-                            String parsedEventData = Util.getBptEventData(eventName, eventData);
-
-                            long id = DeviceEventEntry.getIdFromUri(uri);
-                            Uri bptEntryUri = DeviceEventEntry.buildBptDeviceEventUri(cloudDeviceId, id);
-
-
-                            Intent bptIntent = new Intent(IntentUtil.ACTION_BPT_EVENT, bptEntryUri);
-                            bptIntent.setAction(IntentUtil.ACTION_BPT_EVENT);
-                            bptIntent.putExtras(i);
-
-                            bptIntent.putExtra(IntentUtil.EXTRA_EVENT_NAME, parsedEventData); // event_code is parsed out from the event data
-                            bptIntent.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, event);
-
-                            //TODO: send local broadcast instead ???
-                            //LocalBroadcastManager.getInstance(mContext).sendBroadcast(bptIntent);
-                            mContext.sendBroadcast(bptIntent, IntentUtil.PERMISSION_RECEIVE_EVENTS);
-
-
-                        }catch (DataTypeException e){
+                            event = Util.getBptEventType(eventName, eventData);
+                            parsedEventData = Util.getBptEventData(eventName, eventData);
+                        }catch (IllegalArgumentException e){
                             _log.e("Cannot send ACTION_BPT_EVENT broadcast: " + e.getMessage());
+                            return;
                         }
+
+
+                        long id = DeviceEventEntry.getIdFromUri(uri);
+                        Uri bptEntryUri = DeviceEventEntry.buildBptDeviceEventUri(cloudDeviceId, id);
+
+
+                        Intent bptIntent = new Intent(IntentUtil.ACTION_BPT_EVENT, bptEntryUri);
+                        bptIntent.setAction(IntentUtil.ACTION_BPT_EVENT);
+                        bptIntent.putExtras(i);
+
+                        bptIntent.putExtra(IntentUtil.EXTRA_EVENT_NAME, parsedEventData); // event_code is parsed out from the event data
+                        bptIntent.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, event);
+
+                        //TODO: send local broadcast instead ???
+                        //LocalBroadcastManager.getInstance(mContext).sendBroadcast(bptIntent);
+                        mContext.sendBroadcast(bptIntent, IntentUtil.PERMISSION_RECEIVE_EVENTS);
 
                     }
 
@@ -208,6 +207,9 @@ public class DeviceEventService extends Service {
         public void onFailure(ParticleCloudException e) {
             _log.d("onFailure");
             e.printStackTrace();
+
+            // TODO: how to handle UnknownHostException?
+
             throw new RuntimeException("Cannot subscribe to events from the particle.io cloud: "
                     + e.getBestMessage(), e);
 

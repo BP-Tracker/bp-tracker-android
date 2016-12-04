@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">BP Tracker</string>
 
+    <!-- TODO: better descriptions -->
     <string name="perm_receive_bpt_events_label">Receive BP Tracker events</string>
     <string name="perm_receive_bpt_events_desc">Receive BP Tracker events</string>
+
+    <string name="perm_receive_device_events_label">Receive particle.io device events</string>
+    <string name="perm_receive_device_events_desc">Receive particle.io device events</string>
+
 
     <string name="intro_text">Intro text for BP Tracker</string>
 

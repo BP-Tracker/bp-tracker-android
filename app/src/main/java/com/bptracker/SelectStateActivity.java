@@ -5,35 +5,42 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.bptracker.firmware.Firmware;
+import com.bptracker.firmware.Firmware.Function;
 import com.bptracker.firmware.Firmware.State;
+import com.bptracker.firmware.core.BptApi;
 import com.bptracker.fragment.SelectStateFragment;
+import com.bptracker.util.IntentUtil;
+
+import io.particle.android.sdk.utils.TLog;
 
 public class SelectStateActivity extends Activity
-                                implements SelectStateFragment.SelectStateListener {
-    @Override
-    public void onStateSelect(DialogFragment dialog, State state) {
+                                implements SelectStateFragment.SelectStateListener,
+                                                        BptApi.ResultCallback {
 
-        Toast.makeText(this, "Request sent", Toast.LENGTH_SHORT).show();
-        finishAndRemoveTask();
-    }
+    private ListView mListView;
+    private String mCloudDeviceId;
 
-    @Override
-    public void onStateCancel(DialogFragment dialog) {
-
-        Toast.makeText(this, "Disarm cancelled", Toast.LENGTH_SHORT).show();
-        finishAndRemoveTask();
-    }
-
-    ListView mListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_state);
 
+        mCloudDeviceId = getIntent().getStringExtra(IntentUtil.EXTRA_DEVICE_ID);
+
+        if (TextUtils.isEmpty(mCloudDeviceId)) {
+            _log.e("intent is missing EXTRA_DEVICE_ID parameter. Closing activity");
+
+            Toast.makeText(this, "Request abruptly cancelled", Toast.LENGTH_SHORT).show();
+
+            //TODO: add a friendly alert indicating the issue
+            finishAndRemoveTask();
+        }
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("dialog");
@@ -46,11 +53,56 @@ public class SelectStateActivity extends Activity
         DialogFragment fragment = new SelectStateFragment();
         fragment.show(ft, "dialog");
 
+    }
 
+    @Override
+    public void onStateSelect(DialogFragment dialog, State state) {
+
+        //TODO:
+        //BptApi f = BptApi.createInstance(this, Function.BPT_STATE, mCloudDeviceId, this);
+        //f.addArgument(BptApi.ARG_STATE, State.PAUSED);
+
+
+        BptApi f = BptApi.createInstance(this, Function.BPT_TEST, mCloudDeviceId, this);
+        f.addArgument(BptApi.ARG_TEST_INPUT, Firmware.TestInput.INPUT_ACCEL_INT);
+        f.addArgument(BptApi.ARG_TEST_INPUT_STRING, "1");
+       // f.addArgument(BptApi.ARG_SOFTWARE_RESET, true);
+        f.call();
+
+        Toast.makeText(this, "Request sent", Toast.LENGTH_SHORT).show();
+        finishAndRemoveTask();
+    }
+
+    @Override
+    public void onStateCancel(DialogFragment dialog) {
+
+        //Toast.makeText(this, "Disarm cancelled", Toast.LENGTH_SHORT).show();
+        finishAndRemoveTask();
+    }
+
+
+
+    @Override
+    public void onFunctionError(BptApi function, String reason) {
+        _log.v("onFunctionError: " + reason);
+
+    }
+
+    @Override
+    public void onFunctionTimeout(BptApi function, int source) {
+        _log.v("onFunctionTimeout: " + source);
+
+    }
+
+    @Override
+    public void onFunctionResult(BptApi function, int source, String extra) {
+        _log.v("onFunctionResult [source=" + source + "] " + extra );
 
     }
 
 
+
+    private static final TLog _log = TLog.get(SelectStateActivity.class);
 }
 
 

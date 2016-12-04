@@ -7,9 +7,14 @@ package com.bptracker.util;
 public class IntentUtil {
 
     /**
-     * This local broadcast action forwards incoming device events from the particle.io cloud
+     * This ordered broadcast action forwards incoming device events from the particle.io cloud
      *
-     * Extras: EXTRA_FROM_BPT_DEVICE, EVENT_NAME, EXTRA_EVENT_DATA, EXTRA_DEVICE_NAME
+     * Extras: EXTRA_FROM_BPT_DEVICE, EXTRA_DEVICE_ID, EVENT_NAME, EXTRA_EVENT_DATA,
+     *         EXTRA_DEVICE_NAME
+     *
+     *
+     * NB: do not abort this broadcast or use a filter priority of -100 or lower, otherwise the
+     *       broadcasts may not arrive.
      *
      * URI format: content://com.bptracker/events/[event_id]
      */
@@ -19,7 +24,9 @@ public class IntentUtil {
     /**
      * This broadcast action forwards incoming btp:event events from the particle.io cloud
      *
-     * Extras: EXTRA_BPT_EVENT_TYPE, EVENT_NAME, EXTRA_EVENT_DATA, EXTRA_DEVICE_NAME
+     * Extras: EXTRA_BPT_EVENT_TYPE, EXTRA_DEVICE_ID, EVENT_NAME, EXTRA_EVENT_DATA,
+     *         EXTRA_DEVICE_NAME
+     *
      *
      * Requires permission: PERMISSION_RECEIVE_BPT_EVENTS
      *
@@ -56,7 +63,10 @@ public class IntentUtil {
      Intent permissions
      *******************************************************/
 
-    //NB: this string is also hard-coded in the manifest
+    // NB: these are hard-coded in the manifest
     public static final String PERMISSION_RECEIVE_EVENTS = "com.bptracker.permission.RECEIVE_EVENTS";
+
+    public static final String PERMISSION_RECEIVE_DEVICE_EVENTS
+                                     = "com.bptracker.permission.RECEIVE_DEVICE_EVENTS";
 
 }
