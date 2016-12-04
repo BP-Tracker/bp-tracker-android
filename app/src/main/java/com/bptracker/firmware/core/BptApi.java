@@ -36,13 +36,14 @@ public abstract class BptApi {
     public static final int ARG_LATITUDE = 10; //TODO: should these be in an enum?
     public static final int ARG_LONGITUDE = 20;
     public static final int ARG_STATE = 30;
-    public static final int ARG_BOOLEAN = 40;
-    public static final int ARG_STRING = 50;
-    public static final int ARG_GENERIC = 60;
-    public static final int ARG_SOFTWARE_RESET = 70;
-    public static final int ARG_PROPERTY_RESET = 71;
-    public static final int ARG_TEST_INPUT = 80;
-    public static final int ARG_TEST_INPUT_STRING = 81;
+    public static final int ARG_EVENT_TYPE = 40;
+    public static final int ARG_PROPERTY = 50;
+    public static final int ARG_TEST_INPUT = 60;
+    public static final int ARG_STRING_DATA = 70;
+    public static final int ARG_DATE_DATA = 71;
+    public static final int ARG_BOOLEAN_DATA = 72;
+    public static final int ARG_SOFTWARE_RESET = 80;
+    public static final int ARG_PROPERTY_RESET = 81;
 
 
     public static int RESULT_SOURCE_FUNCTION = 1;
@@ -58,7 +59,6 @@ public abstract class BptApi {
     private WeakReference<ResultCallback> mResultCallback;
     private boolean mCallInProgress;
     private Context mContext;
-    //private List<String> mFunctionArgs;
     private String[] mFunctionArgs;
     private int mLargestFunctionPos;
     private EventReceiver mEventReceiver;
@@ -180,12 +180,6 @@ public abstract class BptApi {
     }
 
     /**
-     *
-     * Can throw an
-     */
-
-
-    /**
      * Perform a final validation of all arguments just before making the call.
      * @param args  A copy of the argument list that the function will be called with.
      *              Invoke addArgumentAtPos to add/modify the arguments.
@@ -290,7 +284,6 @@ public abstract class BptApi {
         }
     }
 
-
     public String getDeviceId(){
         return mCloudDeviceId;
     }
@@ -348,7 +341,6 @@ public abstract class BptApi {
 
         mContext.getContentResolver().update(uri, v, null, null);
     }
-
 
     private void subscribeToDeviceEvents(final ParticleCloud cloud) throws IOException {
         synchronized (mLock) {
@@ -408,7 +400,6 @@ public abstract class BptApi {
             }
         }
     }
-
 
     /**
      * Calls the ResultCallback function and completes the call. Subclasses
@@ -563,11 +554,10 @@ public abstract class BptApi {
         return mUri;
     }
 
-
     public static BptApi createInstance(Context context, Function function, String cloudDeviceId,
-                                        ResultCallback callback){ //TODO: complete
+                                        ResultCallback callback){
 
-        BptApi f = null;
+        BptApi f;
 
         switch (function){
             case BPT_GPS:
@@ -591,17 +581,16 @@ public abstract class BptApi {
             case BPT_ACK:
                 f = new AckFunction(context, cloudDeviceId);
                 break;
+            case BPT_REGISTER:
+                f = new RegisterFunction(context, cloudDeviceId);
+                break;
             case BPT_RESET:
-                //f = new SimpleFunction(context, cloudDeviceId, Function.BPT_RESET.getName());
                 f = new ResetFunction(context, cloudDeviceId);
                 break;
+            default:
+                throw new RuntimeException("Cannot create instance for function "
+                        + function.getName() + "- not supported");
         }
-
-        if (f == null) {
-            throw new RuntimeException("Cannot create instance for function "
-                    + function.getName() + "- not supported");
-        }
-
 
         f.setResultCallback(callback);
         return f;

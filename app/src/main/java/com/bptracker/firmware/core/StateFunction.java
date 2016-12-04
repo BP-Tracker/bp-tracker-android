@@ -49,7 +49,7 @@ public class StateFunction extends BptApi {
         State state = State.getState(Integer.getInteger(arg));
 
         if (state == null) {
-            throw new IllegalArgumentException(arg + " is not a valid state code");
+            throw new IllegalArgumentException(arg + " is not a valid State");
         }
 
         this.addArgument(argumentId, state);
@@ -72,7 +72,7 @@ public class StateFunction extends BptApi {
         try {
             State state = (State) arg;
 
-            if (state.isPrivate()) {
+            if (state == null || state.isPrivate()) {
                 throw new IllegalArgumentException(state.name() + " is not a public state");
             }
 

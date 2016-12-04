@@ -5,6 +5,8 @@ import android.content.Context;
 import com.bptracker.firmware.Firmware;
 import com.bptracker.firmware.Firmware.TestInput;
 
+import javax.annotation.Nonnull;
+
 /**
  * Author: Derek Benda
  */
@@ -34,21 +36,25 @@ public class TestFunction extends BptApi {
     @Override
     public void addArgument(int argumentId, Object arg) {
 
-        if(argumentId != BptApi.ARG_TEST_INPUT && argumentId != BptApi.ARG_TEST_INPUT_STRING){
-            throw new IllegalArgumentException("Argument " + argumentId + " is not supported");
-        }
-
         if(argumentId == BptApi.ARG_TEST_INPUT){
             try {
                 TestInput input = (TestInput) arg;
+                if (input == null) {
+                    throw new IllegalArgumentException("Argument is not a valid TestInput object");
+                }
+
                 addArgumentAtPos(1, Integer.toString(input.getCode()));
 
             } catch (ClassCastException e) {
-                throw new IllegalArgumentException("Argument is not a Firmware.TestInput object");
+                throw new IllegalArgumentException("Argument is not a TestInput object");
             }
 
-        }else{
+        }else if(argumentId == BptApi.ARG_STRING_DATA){
+
             addArgumentAtPos(2, arg.toString());
+
+        }else{
+            throw new IllegalArgumentException("Argument is not supported");
         }
     }
 

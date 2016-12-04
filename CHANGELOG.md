@@ -3,19 +3,18 @@ Change Log
 Changes are documented here.
 
 
-[v0.0.3] - Dec 2, 2016
+[v0.0.3] - Dec 4, 2016
 -------------------------
 ### Added
-  - API for calling functions
-  - BPT function classes
-  - New permission: `com.bptracker.permission.RECEIVE_DEVICE_EVENTS` for broadcast receivers
-  - Firmware datatype TestInput
+  - API for running functions
+  - New permission: `com.bptracker.permission.RECEIVE_DEVICE_EVENTS`
+  - TestInput firmware datatype
 
 ### Upated
   - Function-calls content provider (added event_id and event_data columns)
 
 ### Removed
-  - DataTypeException for IllegalArgumentException
+  - DataTypeException in favor of using IllegalArgumentException
 
 
 [v0.0.2] - Nov 25, 2016

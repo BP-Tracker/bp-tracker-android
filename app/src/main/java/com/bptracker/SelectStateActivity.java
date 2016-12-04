@@ -63,9 +63,12 @@ public class SelectStateActivity extends Activity
         //f.addArgument(BptApi.ARG_STATE, State.PAUSED);
 
 
-        BptApi f = BptApi.createInstance(this, Function.BPT_TEST, mCloudDeviceId, this);
-        f.addArgument(BptApi.ARG_TEST_INPUT, Firmware.TestInput.INPUT_ACCEL_INT);
-        f.addArgument(BptApi.ARG_TEST_INPUT_STRING, "1");
+        BptApi f = BptApi.createInstance(this, Function.BPT_ACK, mCloudDeviceId, this);
+
+        f.addArgument(BptApi.ARG_EVENT_TYPE, Firmware.EventType.NO_GPS_SIGNAL);
+        f.addArgument(BptApi.ARG_STRING_DATA, "1");
+        //f.addArgument(BptApi.ARG_TEST_INPUT, Firmware.TestInput.INPUT_ACCEL_INT);
+        //f.addArgument(BptApi.ARG_STRING_DATA, "1");
        // f.addArgument(BptApi.ARG_SOFTWARE_RESET, true);
         f.call();
 
