@@ -13,7 +13,7 @@ import io.particle.android.sdk.utils.TLog;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 10;
+    private static final int DATABASE_VERSION = 13;
 
     static final String DATABASE_NAME = "bptracker.db";
 
@@ -47,6 +47,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 DeviceFunctionCallEntry.COLUMN_FUNCTION_ARGS + " TEXT, " +
                 DeviceFunctionCallEntry.COLUMN_FUNCTION_RETURN + " TEXT, " +
                 DeviceFunctionCallEntry.COLUMN_PUBLISH_DATE + " INTEGER, " +
+                DeviceFunctionCallEntry.COLUMN_EVENT_ID + " INTEGER, " +
+                DeviceFunctionCallEntry.COLUMN_EVENT_DATA + " TEXT, " +
+                "FOREIGN KEY (" + DeviceFunctionCallEntry.COLUMN_EVENT_ID + " ) " +
+                "REFERENCES " + DeviceEventEntry.TABLE_NAME + " (" + DeviceEventEntry._ID + ") " +
                 "FOREIGN KEY (" + DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + ") " +
                 "REFERENCES " + DeviceEntry.TABLE_NAME + " (" + DeviceEntry.COLUMN_CLOUD_DEVICE_ID + ") );";
         sqLiteDatabase.execSQL(SQL_DEVICE_FUNCTION);
@@ -310,43 +314,3 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final TLog _log = TLog.get(DatabaseHelper.class);
 }
-
-
-
-
-
-
-
-
-
-
- /* final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + WeatherEntry.TABLE_NAME + " (" +
-                // Why AutoIncrement here, and not above?
-                // Unique keys will be auto-generated in either case.  But for weather
-                // forecasting, it's reasonable to assume the user will want information
-                // for a certain date and all dates *following*, so the forecast data
-                // should be sorted accordingly.
-                WeatherEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-
-                // the ID of the location entry associated with this weather data
-                WeatherEntry.COLUMN_LOC_KEY + " INTEGER NOT NULL, " +
-                WeatherEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
-                WeatherEntry.COLUMN_SHORT_DESC + " TEXT NOT NULL, " +
-                WeatherEntry.COLUMN_WEATHER_ID + " INTEGER NOT NULL," +
-
-                WeatherEntry.COLUMN_MIN_TEMP + " REAL NOT NULL, " +
-                WeatherEntry.COLUMN_MAX_TEMP + " REAL NOT NULL, " +
-
-                WeatherEntry.COLUMN_HUMIDITY + " REAL NOT NULL, " +
-                WeatherEntry.COLUMN_PRESSURE + " REAL NOT NULL, " +
-                WeatherEntry.COLUMN_WIND_SPEED + " REAL NOT NULL, " +
-                WeatherEntry.COLUMN_DEGREES + " REAL NOT NULL, " +
-
-                // Set up the location column as a foreign key to location table.
-                " FOREIGN KEY (" + WeatherEntry.COLUMN_LOC_KEY + ") REFERENCES " +
-                LocationEntry.TABLE_NAME + " (" + LocationEntry._ID + "), " +
-
-                // To assure the application have just one weather entry per day
-                // per location, it's created a UNIQUE constraint with REPLACE strategy
-                " UNIQUE (" + WeatherEntry.COLUMN_DATE + ", " +
-                WeatherEntry.COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";*/

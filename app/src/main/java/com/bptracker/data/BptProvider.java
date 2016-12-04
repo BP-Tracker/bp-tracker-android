@@ -449,6 +449,16 @@ public class BptProvider extends ContentProvider {
 
 
         switch (m) {
+            case MATCHER_BY_FUNCTION_CALLS_ID:
+
+                long id = DeviceFunctionCallEntry.getIdFromUri(uri);
+
+                rowsUpdated = db.update(DeviceFunctionCallEntry.TABLE_NAME, values,
+                        DeviceFunctionCallEntry.TABLE_NAME + "."
+                                + DeviceFunctionCallEntry._ID + " = ?",
+                                new String[]{ Long.toString(id)});
+
+                break;
             case MATCHER_BY_DEVICE_ID:
 
                 long deviceId = DeviceEntry.getDeviceIdFromUri(uri);

@@ -100,6 +100,8 @@ public class BptContract {
         public static final String COLUMN_FUNCTION_ARGS = "function_args";
         public static final String COLUMN_FUNCTION_RETURN = "function_return";
         public static final String COLUMN_PUBLISH_DATE = "published";
+        public static final String COLUMN_EVENT_ID = "event_id";
+        public static final String COLUMN_EVENT_DATA = "event_data";
 
 
         //devices/*/bpt-function-calls
