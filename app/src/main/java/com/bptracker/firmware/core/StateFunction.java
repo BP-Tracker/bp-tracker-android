@@ -1,6 +1,10 @@
 package com.bptracker.firmware.core;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import com.bptracker.firmware.Firmware.EventType;
 import com.bptracker.firmware.Firmware;
@@ -14,33 +18,66 @@ import io.particle.android.sdk.utils.TLog;
  * Author: Derek Benda
  */
 
-public class StateFunction extends BptApi {
+public class StateFunction extends Function {
 
-    public StateFunction(Context context, String deviceId) {
-        super(context, deviceId, Firmware.Function.BPT_STATE.getName());
+    private boolean mGetStateMode;
 
-        // Listen for the bpt:event STATE_CHANGE event
-        this.registerEventReceiver(new EventReceiver() {
+    public static final Parcelable.Creator<StateFunction> CREATOR = new Parcelable.Creator<StateFunction>() {
+        public StateFunction createFromParcel(Parcel in) {
+            return new StateFunction(in);
+        }
 
-            @Override
-            public boolean receive(String name, ParticleEvent event) {
+        public StateFunction[] newArray(int size) {
+            return new StateFunction[size];
+        }
+    };
 
-                if(isMyDevice(event) && Util.isBptEvent(name)){
 
-                    EventType type = Util.getBptEventType(name, event.dataPayload);
+    protected StateFunction(Parcel in) {
+        super(in);
+        mGetStateMode = in.readByte() != 0;
+    }
 
-                    if (type == EventType.STATE_CHANGE) {
-                        //_log.d("Found event");
-                        String data = Util.getBptEventData(name, event.dataPayload);
-                        completeCall(data, event);
-                        return true;
-                    }
+
+    public StateFunction(String deviceId) {
+        super(Firmware.Function.BPT_STATE.getName(), deviceId);
+        mGetStateMode = true;
+    }
+
+    @Override
+    public boolean doReceiveEvents() {
+        return true;
+    }
+
+    //
+    @Override
+    public @Nullable String receiveEvent(String eventName, ParticleEvent event) {
+        _log.v("receiverEvent called [eventName=" + eventName + "] " + isMyDevice(event) + "][" + Util.isBptEvent(eventName));
+        if(isMyDevice(event)){
+
+            if(mGetStateMode){
+
+                if( eventName.equals(this.getName()) ){ // found event
+                    return event.dataPayload;
                 }
 
-                return false;
+            }else{
+
+                if(Util.isBptEvent(eventName)) {  // Listen for the bpt:event STATE_CHANGE event
+                    EventType type = Util.getBptEventType(eventName, event.dataPayload);
+
+                    if (type == EventType.STATE_CHANGE) {
+
+                        String data = Util.getBptEventData(eventName, event.dataPayload);
+                        _log.v("Found event [" + data + "]");
+                        return data;
+                    }
+                }
             }
-        });
+        }
+        return null;
     }
+
 
     @Override
     public void addArgument(int argumentId, String arg) {
@@ -76,6 +113,7 @@ public class StateFunction extends BptApi {
                 throw new IllegalArgumentException(state.name() + " is not a public state");
             }
 
+            mGetStateMode = false;
             this.addArgumentAtPos(1, Integer.toString(state.getCode()));
 
         }catch (ClassCastException e){
@@ -84,11 +122,18 @@ public class StateFunction extends BptApi {
     }
 
     @Override
-    protected void validateArgsForCall(String[] args) {
-
+    protected String[] validateArgs(String[] args) {
         if(args.length > 1){
             throw new IllegalArgumentException("The state function only accepts zero or one argument");
         }
+        return args;
+    }
+
+
+    @Override
+    public void writeToParcel(Parcel out, int flags) {
+        super.writeToParcel(out, flags);
+        out.writeByte((byte) (mGetStateMode ? 1 : 0));
     }
 
     private static final TLog _log = TLog.get(StateFunction.class);

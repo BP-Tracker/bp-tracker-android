@@ -1,6 +1,8 @@
 package com.bptracker.firmware.core;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.bptracker.firmware.Firmware;
 import com.bptracker.firmware.Firmware.TestInput;
@@ -11,11 +13,26 @@ import javax.annotation.Nonnull;
  * Author: Derek Benda
  */
 
-public class TestFunction extends BptApi {
+public class TestFunction extends Function {
+
+    public static final Parcelable.Creator<TestFunction> CREATOR = new Parcelable.Creator<TestFunction>() {
+        public TestFunction createFromParcel(Parcel in) {
+            return new TestFunction(in);
+        }
+
+        public TestFunction[] newArray(int size) {
+            return new TestFunction[size];
+        }
+    };
+
+    protected TestFunction(Parcel in) {
+        super(in);
+    }
+
 
     // NB: not events are returned from this function
-    public TestFunction(Context context, String deviceId) {
-        super(context, deviceId, Firmware.Function.BPT_TEST.getName());
+    public TestFunction(String deviceId) {
+        super(Firmware.Function.BPT_TEST.getName(), deviceId);
     }
 
     @Override
@@ -59,9 +76,10 @@ public class TestFunction extends BptApi {
     }
 
     @Override
-    protected void validateArgsForCall(String[] args) {
+    protected String[] validateArgs(String[] args) {
         if (args.length != 2) {
             throw new IllegalArgumentException("Function expects two arguments");
         }
+        return args;
     }
 }

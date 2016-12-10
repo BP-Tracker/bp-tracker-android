@@ -1,6 +1,8 @@
 package com.bptracker.firmware.core;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.bptracker.firmware.Firmware;
 
@@ -10,13 +12,28 @@ import java.util.List;
  * Author: Derek Benda
  */
 
-public class ResetFunction extends BptApi {
+public class ResetFunction extends Function {
 
-    boolean softwareResetSet;
+    private boolean mSoftwareResetSet;
 
-    public ResetFunction(Context context, String deviceId) {
-        super(context, deviceId, Firmware.Function.BPT_RESET.getName());
-        softwareResetSet = false;
+    public static final Parcelable.Creator<ResetFunction> CREATOR = new Parcelable.Creator<ResetFunction>() {
+        public ResetFunction createFromParcel(Parcel in) {
+            return new ResetFunction(in);
+        }
+
+        public ResetFunction[] newArray(int size) {
+            return new ResetFunction[size];
+        }
+    };
+
+    protected ResetFunction(Parcel in) {
+        super(in);
+        mSoftwareResetSet = in.readByte() != 0;
+    }
+
+    public ResetFunction(String deviceId) {
+        super(Firmware.Function.BPT_RESET.getName(), deviceId);
+        mSoftwareResetSet = false;
     }
 
     @Override
@@ -53,7 +70,7 @@ public class ResetFunction extends BptApi {
                 addArgumentAtPos(1, b ? "1" : "0" );
             }else{
                 addArgumentAtPos(2, b ? "1" : "0" );
-                softwareResetSet = true;
+                mSoftwareResetSet = true;
             }
 
         } catch (ClassCastException e) {
@@ -63,12 +80,23 @@ public class ResetFunction extends BptApi {
     }
 
     @Override
-    protected void validateArgsForCall(String[] args) {
+    protected String[] validateArgs(String[] args) {
 
-        if(softwareResetSet && args.length == 1){
-            // set the props reset to the default (false)
-            addArgumentAtPos(1, "0"); //todo will this correctly modify args?
+        if(mSoftwareResetSet && args.length == 1){
+
+            String[] newArgs = new String[2];
+
+            newArgs[0] = args[0];
+            newArgs[1] = "0";
+            return newArgs; //todo will this correctly modify args?
         }
 
+        return args;
+    }
+
+    @Override
+    public void writeToParcel(Parcel out, int flags) {
+        super.writeToParcel(out, flags);
+        out.writeByte((byte) (mSoftwareResetSet ? 1 : 0));
     }
 }

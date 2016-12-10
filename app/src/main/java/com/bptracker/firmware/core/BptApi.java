@@ -2,16 +2,21 @@ package com.bptracker.firmware.core;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.bptracker.data.BptContract.DeviceFunctionCallEntry;
-import com.bptracker.firmware.Firmware.Function;
+import com.bptracker.firmware.Firmware;
 import com.bptracker.firmware.FirmwareException;
+import com.bptracker.util.IntentUtil;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,14 +29,12 @@ import io.particle.android.sdk.cloud.ParticleCloudSDK;
 import io.particle.android.sdk.cloud.ParticleDevice;
 import io.particle.android.sdk.cloud.ParticleEvent;
 import io.particle.android.sdk.cloud.ParticleEventHandler;
-import io.particle.android.sdk.utils.Async;
 import io.particle.android.sdk.utils.TLog;
 
 /**
  * Author: Derek Benda
  */
-
-public abstract class BptApi {
+public class BptApi {
 
     public static final int ARG_LATITUDE = 10; //TODO: should these be in an enum?
     public static final int ARG_LONGITUDE = 20;
@@ -45,39 +48,53 @@ public abstract class BptApi {
     public static final int ARG_SOFTWARE_RESET = 80;
     public static final int ARG_PROPERTY_RESET = 81;
 
-
     public static int RESULT_SOURCE_FUNCTION = 1;
     public static int RESULT_SOURCE_EVENT = 2;
 
-    private static final int FUNCTION_ARG_CAPACITY = 10;
     private static final int RECEIVER_QUEUE_CAPACITY = 10; // maximum active functions
 
-    private String mCloudDeviceId;
-    private String mFunctionName;
-    private Uri mUri;
-
-    private WeakReference<ResultCallback> mResultCallback;
-    private boolean mCallInProgress;
-    private Context mContext;
-    private String[] mFunctionArgs;
-    private int mLargestFunctionPos;
-    private EventReceiver mEventReceiver;
-
-
-    // Class specific - for subscribing to particle.io events
+    private static HandlerThread mHandlerThread; // lazy loaded worker thread for API calls
+    private static BptApi mBptApiInstance;
+    private static Context mContext;
     private static final Object mLock;
     private static long mCloudSubscriptionId;
-    private static final BlockingQueue<EventReceiver> mEventReceiverQueue;
+    private static final BlockingQueue<FunctionResultReceiver> mEventReceiverQueue;
 
     static {
         mEventReceiverQueue = new LinkedBlockingQueue<>(RECEIVER_QUEUE_CAPACITY);
         mLock = new Object();
     }
 
-    interface EventReceiver {
+
+    public interface ResultCallback {
+        /**
+         * Returns the result of the function call. Some functions return results in a
+         * particle.io event with the same name. Hence, this method will be called twice.
+         * @param function  The Function instance
+         * @param result    The result
+         * @param eventResult    The function or event result
+         */
+        public void onFunctionResult(Function function, int result, @Nullable String eventResult);
 
         /**
-         * Receives incoming private device events during an active function call. This allows
+         * Returns when the request could not be completed on the firmware.
+         * @param function this
+         * @param reason the error reason
+         */
+        public void onFunctionError(Function function, String reason);
+
+        /**
+         * Called when the call has timed out.
+         * @param function this
+         * @param source  the source of the timeout
+         */
+        public void onFunctionTimeout(Function function, int source);
+    }
+
+    interface FunctionResultReceiver {
+
+        /**
+         * Receives function results and incoming device events during a function call. This allows
          * implementors a chance to listen for an event that is known to be returned from the call.
          * Once the event is received this method must return true to indicate it's
          * finished. The class will then automatically unregister the receiver.
@@ -100,249 +117,272 @@ public abstract class BptApi {
          *
          * @param name  The event name
          * @param event The event payload
-         * @return  Return true when the particular event has arrived, false if it has not.
+         * @return  Return a non-null string when the particular event has arrived.
          */
-        public boolean receive(String name, ParticleEvent event);
+        public @Nullable String receiveEvent(String name, ParticleEvent event);
+
+        public void receiveResult(int result);
+
+        public boolean doReceiveEvents();
+
+        public Uri getUri();
+
+        public void setUri(Uri uri);
+
     }
 
+    public static BptApi getInstance() {
 
-    public interface ResultCallback {
-        /**
-         * Returns the result of the function call. Some functions return results in a
-         * particle.io event with the same name. Hence, this method will be called twice.
-         * @param function  The BptApi instance
-         * @param source    The result source: either RESULT_SOURCE_FUNCTION or RESULT_SOURCE_EVENT.
-         * @param result    The function or event result
-         */
-        public void onFunctionResult(BptApi function, int source, String result);
-
-        /**
-         * Returns when the request could not be completed on the firmware.
-         * @param function this
-         * @param reason the error reason
-         */
-        public void onFunctionError(BptApi function, String reason);
-
-        /**
-         * Called when the call has timed out.
-         * @param function this
-         * @param source  the source of the timeout
-         */
-        public void onFunctionTimeout(BptApi function, int source);
-    }
-
-
-    public BptApi(Context context, String cloudDeviceId, String functionName) {
-        init(context, cloudDeviceId, functionName);
-    }
-
-    public BptApi(Context context, String cloudDeviceId, String functionName, String[] functionArgs){
-        init(context, cloudDeviceId, functionName);
-        mFunctionArgs = functionArgs;
-        mLargestFunctionPos = functionArgs.length - 1;
-    }
-
-    private void init(Context context, String cloudDeviceId, String functionName){ //TODO: complete
-        mContext = context;
-        mCloudDeviceId = cloudDeviceId;
-        mFunctionName = functionName;
-        mCallInProgress = false;
-        mResultCallback = null;
-        mEventReceiver = null;
-        mFunctionArgs = new String[FUNCTION_ARG_CAPACITY];
-        mLargestFunctionPos = -1;
-    }
-
-
-    /**
-     * Abstract method to add arguments to the function. Internally, use addArgumentAtPos
-     * to add the arguments. Can throw an IllegalArgumentException
-     * @param argumentId    An ID the concrete class understands
-     * @param arg           The argument
-     */
-    public abstract void addArgument(int argumentId, String arg);
-
-
-    public void addArgument(int argumentId, long arg) {
-        this.addArgument(argumentId, Long.toString(arg));
-    }
-
-    public void addArgument(int argumentId, int arg) {
-        this.addArgument(argumentId, Integer.toString(arg));
-    }
-
-    public void addArgument(int argumentId, float arg) {
-        this.addArgument(argumentId, Float.toString(arg));
-    }
-
-    public void addArgument(int argumentId, Object arg) {
-        this.addArgument(argumentId, arg.toString());
-    }
-
-    /**
-     * Perform a final validation of all arguments just before making the call.
-     * @param args  A copy of the argument list that the function will be called with.
-     *              Invoke addArgumentAtPos to add/modify the arguments.
-     * @throws IllegalArgumentException when the arguments are not valid
-     */
-    protected abstract void validateArgsForCall(String[] args);
-
-
-    /**
-     * Adds or replaces the argument value at the specified position starting
-     * at position 1. Note: only basic validation occurs here.
-     * @param pos The position to place the argument at
-     * @param arg The argument value
-     */
-     protected void addArgumentAtPos(int pos, String arg) {
-
-        if(pos <= 0 ){
-            throw new IllegalArgumentException("position must be greater than 0");
+        if (mBptApiInstance == null) {
+            throw new IllegalStateException("init not called before using this class. "
+                    + "Are you calling BptApi.init() in your Application.onCreate()?");
         }
+        return mBptApiInstance;
+    }
 
-         if(pos > FUNCTION_ARG_CAPACITY ){
-             throw new IllegalArgumentException("a maximum of " + FUNCTION_ARG_CAPACITY
-                     + " arguments are supported");
-         }
+    private Context getContext(){
+        return mContext;
+    }
 
-         mFunctionArgs[pos - 1] = arg;
+    private static Looper getLooper(){
+        synchronized (BptApi.class){
+            if(mHandlerThread == null){
 
-         if(mLargestFunctionPos < pos - 1) {
-             mLargestFunctionPos = pos - 1;
-         }
+                mHandlerThread = new HandlerThread("BptApi Worker Thread");
+                mHandlerThread.start();
+            }else if(!mHandlerThread.isAlive()){
+                _log.w("BptApi Worker Thread finished, recreating");
+
+                mHandlerThread = new HandlerThread("BptApi Worker Thread");
+                mHandlerThread.start();
+            }
+        }
+        return mHandlerThread.getLooper();
     }
 
     /**
-     * Call this method during initialization or validation when the function is expected to
-     * return data in a particle event. The receiver will be enabled once the function is called
-     * and disabled and unregistered when its receive method returns true;
+     * Initialize the cloud SDK.  Must be called somewhere in your Application.onCreate()
      *
+     * (or anywhere else before your first Activity.onCreate() is called)
+     */
+    public static void init(Context ctx){
+
+        if (mBptApiInstance != null) {
+            _log.w("Calling BptApi.init() more than once does not re-initialize the class.");
+            return;
+        }
+
+        Context appContext = ctx.getApplicationContext();
+        mBptApiInstance = new BptApi(appContext);
+    }
+
+
+    /**
+     * Performs a validation of all the arguments and invokes the function on the particle
+     * cloud. See also RunFunctionService for a broadcast based implementation.
      *
-     * @param receiver  The event receiver. When this is null the class will create a
-     *                  local receiver and listen for the first event that matches the function name.
-     *                  Call completeCall and return true once the target event was found.
+     * @return  A uri of the function call of the form: content://com.bptracker/function-calls/[id]
+     * @throws FirmwareException When no ResultCallback listener is attached and an error occurred
+     * during setup.
+     * @return  The URI of the function call or null if an error occurred
      */
-    protected void registerEventReceiver(@Nullable EventReceiver receiver){
-        _log.d("registerEventReceiver called");
-        if (mEventReceiver != null) {
-            throw new IllegalArgumentException("A receiver has already been registered");
-        }
-
-        mEventReceiver = receiver == null ? new FunctionNameEventReceiver() : receiver;
-    }
-
-    /**
-     * Registers a default event receiver
-     */
-    protected void registerEventReceiver(){
-        registerEventReceiver(null);
-    }
-
-    protected void unregisterEventReceiver(){
-        if(mEventReceiver != null){
-            mEventReceiverQueue.remove(mEventReceiver);
-            mEventReceiver = null;
-        }
-    }
-
-    /**
-     * Is the event coming from this device.
-     * @param event The event
-     * @return  True if the event came from this device
-     */
-    protected boolean isMyDevice(ParticleEvent event){
-        return this.getDeviceId().equals(event.deviceId);
-    }
-
-    /**
-     * Adds a result listener for the function
-     * @param callback A ResultCallback listener
-     */
-    public void setResultCallback(ResultCallback callback) {
-        mResultCallback = new WeakReference<ResultCallback>(callback);
-    }
-
-    /**
-     * Cancels any pending calls and resets the object to the pre-call state
-     *
-     * @param clearArguments Set to true at also clear the arguments
-     */
-    public void reset(boolean clearArguments){
-
-        if (mResultCallback != null) {
-            mResultCallback.clear();
-            mResultCallback = null;
-        }
-
-        unregisterEventReceiver();
-
-        mCallInProgress = false;
-
-        if(clearArguments) {
-            mFunctionArgs = new String[FUNCTION_ARG_CAPACITY];
-            mLargestFunctionPos = -1;
-        }
-    }
-
-    public String getDeviceId(){
-        return mCloudDeviceId;
-    }
-
     @Nullable
-    public Uri getCallUri(){
-        return mUri;
+    public static Uri call(final Function function, final ResultCallback callback){
+        BptApi api = BptApi.getInstance();
+
+        return api.callFunction(function, callback);
     }
 
-    private Uri createNewFunctionUri(String deviceId, String funcName, String funcArgs){
 
+    public Uri callFunction(Function function, ResultCallback callback) {
+        _log.v("calling function " + function + " [thread=" + Thread.currentThread().getName() + "]");
+
+        Uri uri = createNewFunctionUri(function, true);
+        Handler functionHandler = new FunctionHandler(BptApi.getLooper());
+
+        Message m = Message.obtain(functionHandler, FunctionHandler.MSG_RUN_FUNCTION, callback);
+        m.getData().putParcelable(IntentUtil.EXTRA_FUNCTION, function);
+        m.sendToTarget();
+
+        _log.v("returning uri " + uri);
+        return uri;
+    }
+
+
+
+
+    // runs the function
+    private static class FunctionHandler extends Handler {
+        public static final int MSG_RUN_FUNCTION = 1;
+        public static final int MSG_QUIT_HANDLER = 2;
+
+        public FunctionHandler(Looper looper){
+            super(looper);
+        }
+
+        public void handleMessage(Message msg) {
+            _log.d("handleMessage " + msg.what + " in " + Thread.currentThread());
+
+            switch (msg.what){
+
+                case MSG_QUIT_HANDLER:
+                    this.getLooper().quit(); //TODO: is this enough?
+
+                case MSG_RUN_FUNCTION:
+
+                    Function f = msg.getData().getParcelable(IntentUtil.EXTRA_FUNCTION);
+                    FunctionObserver observer = new FunctionObserver(this, f, (ResultCallback) msg.obj );
+
+                    try {
+
+                        List<String> args = new ArrayList<>(1);
+                        args.add( f.getArgs() );
+
+                        ParticleCloud cloud = ParticleCloudSDK.getCloud();
+                        ParticleDevice device = cloud.getDevice(f.getDeviceId());
+
+                        if(f.doReceiveEvents()){
+                            mEventReceiverQueue.add(f);
+                            BptApi.subscribeToDeviceEvents(cloud);
+                            mContext.getContentResolver().registerContentObserver(f.getUri(), false, observer);
+                        }
+
+
+                        int result = device.callFunction(f.getName(), args);
+                        f.receiveResult(result);
+                        observer.updateOrSendResult(result);
+
+                    } catch (ParticleDevice.FunctionDoesNotExistException
+                                        | ParticleCloudException| IOException e ) {
+                        _log.e("particle exception - " + e.getMessage());
+
+                        observer.sendErrorToCallback( e.getMessage() );
+                        observer.unRegister(true); //quits the looper thread as well
+                    }
+
+                    break;
+
+                default:
+                    super.handleMessage(msg);
+            }
+        };
+    }
+
+    private static class FunctionObserver extends ContentObserver {
+
+        private static final String[] COLUMNS = { DeviceFunctionCallEntry.COLUMN_EVENT_DATA };
+        public static final int COL_EVENT_DATA = 0;
+
+        private Function mFunction;
+        private ResultCallback mCallback;
+        private int mFunctionResult;
+        private Handler mHandler;
+
+
+        public FunctionObserver(Handler h, Function f, ResultCallback r){
+            super(h);
+            mHandler = h;
+            mFunction = f;
+            mCallback = r;
+            mFunctionResult = -1; // Error prone
+        }
+
+        // NB: Will only be called when a function event is expected
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            _log.v("onChange called for " + uri);
+
+            if(!uri.equals(mFunction.getUri())){
+                _log.e("The expected URI differs with the function's URI: " +
+                        uri.toString() + " vs " + mFunction.getUri().toString() );
+
+                unRegister(true);
+                return;
+            }
+
+            String result = null;
+            Context context = BptApi.getInstance().getContext();
+            Cursor c = context.getContentResolver().query(mFunction.getUri(),
+                    COLUMNS, null, null, null);
+
+            if(c.moveToFirst()){
+                result = c.getString(COL_EVENT_DATA);
+            }
+            c.close();
+
+            mCallback.onFunctionResult(mFunction, mFunctionResult, result);
+
+            unRegister(true);
+        }
+
+        /**
+         * The invocation of the callback will be deferred until the event arrives if
+         * the function expects it (doReceiveEvents() is true)
+         * @param result    The function result code
+         */
+        public void updateOrSendResult(int result){
+            _log.v("updateAndSendResult called " + result + " [receiveEvents=" +
+                            mFunction.doReceiveEvents() + "]");
+
+            if(!mFunction.doReceiveEvents()){
+                unRegister(true);
+
+                ContentValues v = new ContentValues();
+                v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_RETURN, result);
+                mContext.getContentResolver().update(mFunction.getUri(), v, null, null);
+
+                mCallback.onFunctionResult(mFunction, result, null);
+
+            }else{
+                mFunctionResult = result;  // save result until the event comes in, or a timeout happens: TODO
+            }
+        }
+
+        public void sendErrorToCallback(String error) {
+            mCallback.onFunctionError(mFunction, error);
+        }
+
+        public void unRegister(boolean quitLooper){
+            mContext.getContentResolver().unregisterContentObserver(this);
+
+            if(quitLooper){
+                mHandler.getLooper().quitSafely();
+            }
+        }
+    }
+
+    private BptApi(Context context) {
+        mContext = context;
+    }
+
+    private Uri createNewFunctionUri(Function function, boolean setUriInFunction){
         ContentValues v = new ContentValues();
 
-        v.put(DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID, deviceId);
-        v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_NAME, funcName);
-        v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_ARGS, funcArgs);
+        v.put(DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID, function.getDeviceId());
+        v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_NAME, function.getName());
+        v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_ARGS, function.getArgs());
         v.put(DeviceFunctionCallEntry.COLUMN_PUBLISH_DATE, new Date().getTime());
 
-
         Uri uri = mContext.getContentResolver().insert(DeviceFunctionCallEntry.CONTENT_URI, v);
+
+        if(setUriInFunction) {
+            function.setUri(uri);
+        }
 
         return uri;
     }
 
-    private void updateFunctionUri(Uri uri, int source, int resultOrEventId, String extra) {
+    private static void updateFunctionUri(Uri uri, ParticleEvent event, String eventResult) {
+        _log.v("updateFunctionUri called");
 
-        if(source != RESULT_SOURCE_FUNCTION && source != RESULT_SOURCE_EVENT){
-            throw new RuntimeException("source unknown" + source);
-        }
-
-        if(mResultCallback != null){
-
-            ResultCallback cb = mResultCallback.get();
-
-            if(cb != null){
-                cb.onFunctionResult(this, BptApi.RESULT_SOURCE_FUNCTION,
-                        source == RESULT_SOURCE_FUNCTION
-                                ? Integer.toString(resultOrEventId) : extra);
-            }
-        }
-
+        //TODO: tie in the event_id somehow (right now it's null)
         ContentValues v = new ContentValues();
-        if(source == RESULT_SOURCE_FUNCTION){
-            v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_RETURN, resultOrEventId);
-        }else{
-
-            if(resultOrEventId > 0) {
-                v.put(DeviceFunctionCallEntry.COLUMN_EVENT_ID, resultOrEventId);
-            }
-
-            if (extra != null) {
-                v.put(DeviceFunctionCallEntry.COLUMN_EVENT_DATA, extra);
-            }
-        }
+        v.put(DeviceFunctionCallEntry.COLUMN_EVENT_DATA, eventResult);
 
         mContext.getContentResolver().update(uri, v, null, null);
     }
 
-    private void subscribeToDeviceEvents(final ParticleCloud cloud) throws IOException {
+    private static void subscribeToDeviceEvents(final ParticleCloud cloud) throws IOException {
         synchronized (mLock) {
 
             if(mCloudSubscriptionId <= 0 && mEventReceiverQueue.size() > 0){
@@ -355,14 +395,18 @@ public abstract class BptApi {
                                 + "][eventName=" + eventName + "][receiverQueue=" +
                                 mEventReceiverQueue.size() + "]");
 
-                        EventReceiver receiver = mEventReceiverQueue.peek();
+                        FunctionResultReceiver receiver = mEventReceiverQueue.peek();
+
+                        _log.d("receiver = " + receiver);
 
                         if(receiver != null){ //could have been unregistered
-                            boolean foundEvent = receiver.receive(eventName, particleEvent);
-                            if (foundEvent) {
-                                //_log.d("!event found !" + eventName + " [data=" + particleEvent.dataPayload + "]");
+                            String foundEvent = receiver.receiveEvent(eventName, particleEvent);
+                            if (foundEvent != null) {
+                                _log.v("!event found !" + eventName + " [data=" + foundEvent + "]");
 
-                                //don't take because receiver calls callComplete which calls reset
+                                updateFunctionUri(receiver.getUri(), particleEvent, foundEvent);
+
+                                //TODO: change to take?
                                 mEventReceiverQueue.remove(receiver);
                             }
                         }
@@ -401,215 +445,286 @@ public abstract class BptApi {
         }
     }
 
+
+
     /**
-     * Calls the ResultCallback function and completes the call. Subclasses
-     * should call this in the EventReceiver.receive method.
+     * Creates an instance of a BPT function.
      *
-     * @param eventData The data to put into DeviceFunctionCallEntry.COLUMN_EVENT_DATA
-     * @param event   The event payload to pass into DeviceFunctionCallEntry.COLUMN_EVENT_ID TODO: support this
+     * See respective documentation for adding arguments
+     *
+     * <p>Function.BPT_ACK {@link AckFunction}
+     * <p>Function.BPT_STATE {@link StateFunction}
+     * <p>Function.BPT_GPS {@link GpsFunction}
+     * <p>Function.BPT_STATUS {@link StatusFunction}
+     * <p>Function.BPT_RESEST {@link ResetFunction}
+     * <p>Function.BPT_REGISTER {@link RegisterFunction}
+     * <p>Function.BPT_PROBE {@link ProbeFunction}
+     * <p>Function.BPT_TEST {@link TestFunction}
+     *
+     * @param function
+     * @param cloudDeviceId
+     * @return
      */
-    void completeCall(@Nullable String eventData, @Nullable ParticleEvent event){
-        _log.i("completing function call for " + mUri);
-
-        updateFunctionUri(mUri, RESULT_SOURCE_EVENT, 0, eventData);
-
-
-        ResultCallback cb = mResultCallback.get();
-        if (cb != null) {
-            cb.onFunctionResult(this, RESULT_SOURCE_EVENT, eventData );
-        }
-
-        mCallInProgress = false;
-        reset(false);
-    }
-
-    private void doRegisterEventReceiver(){
-        if(mEventReceiver == null){
-            throw new RuntimeException("Event receiver is null");
-        }
-
-        mEventReceiverQueue.add(mEventReceiver);
-    }
-
-
-    private String[] resizeFunctionArgs(){
-        String[] resized = new String[mLargestFunctionPos + 1];
-        for(int i = 0; i <= mLargestFunctionPos; i++) {
-            resized[i] = mFunctionArgs[i];
-        }
-
-        return resized;
-    }
-
-    /**
-     * Performs a validation of all the arguments and invokes the function on the particle
-     * cloud.
-     * @return  A uri of the function call of the form: content://com.bptracker/function-calls/[id]
-     * @throws FirmwareException When no ResultCallback listener is attached and an error occurred
-     * during setup.
-     * @return  The URI of the function call or null if an error occurred
-     */
-    public @Nullable Uri call() {
-
-        _log.v("calling function " + mFunctionName + " with " + (mLargestFunctionPos + 1) + " arguments");
-
-        if (mCallInProgress == true) {
-            throw new FirmwareException("A call is already in progress");
-        }
-
-        mCallInProgress = true;
-
-        try {
-            validateArgsForCall(resizeFunctionArgs());
-        } catch (IllegalArgumentException e) {
-            mCallInProgress = false;
-
-            if (mResultCallback != null) {
-
-
-                ResultCallback cb = mResultCallback.get();
-                if (cb != null) {
-                    cb.onFunctionError(this, e.getMessage());
-                }
-
-                reset(false); //TODO: reset here?
-                return null;
-
-            }else{
-                reset(false);
-                throw new FirmwareException(e);
-            }
-        }
-
-        if(mEventReceiver != null){
-            doRegisterEventReceiver();
-        }
-
-        mFunctionArgs = resizeFunctionArgs();
-
-        final String funcArgs;
-
-        if(mFunctionArgs.length > 0) {
-            StringBuffer buf = new StringBuffer(mFunctionArgs.length);
-            for (int i = 0; i < mLargestFunctionPos; i++) {
-
-                String a = TextUtils.isEmpty(mFunctionArgs[i]) ? "" : mFunctionArgs[i];
-                buf.append(a);
-                buf.append(",");
-            }
-            buf.append(mFunctionArgs[mLargestFunctionPos]);
-            funcArgs = buf.toString();
-        } else {
-            funcArgs = "";
-        }
-
-        mUri = createNewFunctionUri(mCloudDeviceId, mFunctionName, funcArgs);
-
-        Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, Void>(){
-
-           @Override
-           public Void callApi(ParticleCloud cloud) throws ParticleCloudException, IOException {
-               ParticleDevice device = cloud.getDevice(mCloudDeviceId);
-
-               List<String> a = new ArrayList<>(1);
-               a.add( funcArgs );
-
-               subscribeToDeviceEvents(cloud);
-
-               try {
-                   int result = device.callFunction(mFunctionName, a);
-                   updateFunctionUri(mUri, RESULT_SOURCE_FUNCTION, result, null);
-
-                   if (mEventReceiver == null) { // function completed
-                       mCallInProgress = false;
-                       reset(false);
-                   }
-
-               } catch (ParticleDevice.FunctionDoesNotExistException e) {
-                   throw new ParticleCloudException(e);
-               }
-
-                return null;
-           }
-
-           @Override
-           public void onSuccess(Void aVoid) { }
-
-           @Override
-           public void onFailure(ParticleCloudException e) {
-               _log.e("call onFailure" + e.getBestMessage());
-
-               if (mResultCallback != null) { // TODO: test this
-                   ResultCallback r = mResultCallback.get();
-                   if (r != null) {
-                       r.onFunctionError(BptApi.this, e.getMessage());
-                   }
-               }else{
-                   e.printStackTrace();
-               }
-           }
-        });
-
-        _log.v("returning uri " + mUri);
-        return mUri;
-    }
-
-    public static BptApi createInstance(Context context, Function function, String cloudDeviceId,
-                                        ResultCallback callback){
-
-        BptApi f;
+    public static Function createFunction(Firmware.Function function, String cloudDeviceId){
+        Function f;
 
         switch (function){
             case BPT_GPS:
-                f = new GpsFunction(context, cloudDeviceId);
+                f = new GpsFunction(cloudDeviceId);
                 break;
             case BPT_STATE:
-                f = new StateFunction(context, cloudDeviceId);
+                f = new StateFunction(cloudDeviceId);
                 break;
             case BPT_DIAG:
-                f = new DiagnosticFunction(context, cloudDeviceId);
+                f = new DiagnosticFunction(cloudDeviceId);
                 break;
             case BPT_PROBE:
-                f = new ProbeFunction(context, cloudDeviceId);
+                f = new ProbeFunction(cloudDeviceId);
                 break;
             case BPT_STATUS:
-                f = new StatusFunction(context, cloudDeviceId);
+                f = new StatusFunction(cloudDeviceId);
                 break;
             case BPT_TEST:
-                f = new TestFunction(context, cloudDeviceId);
+                f = new TestFunction(cloudDeviceId);
                 break;
             case BPT_ACK:
-                f = new AckFunction(context, cloudDeviceId);
+                f = new AckFunction(cloudDeviceId);
                 break;
             case BPT_REGISTER:
-                f = new RegisterFunction(context, cloudDeviceId);
+                f = new RegisterFunction(cloudDeviceId);
                 break;
             case BPT_RESET:
-                f = new ResetFunction(context, cloudDeviceId);
+                f = new ResetFunction(cloudDeviceId);
                 break;
             default:
                 throw new RuntimeException("Cannot create instance for function "
                         + function.getName() + "- not supported");
         }
 
-        f.setResultCallback(callback);
         return f;
-    }
-
-    private class FunctionNameEventReceiver implements EventReceiver {
-
-        @Override
-        public boolean receive(String name, ParticleEvent event) {
-
-            if(isMyDevice(event) && name.equals(mFunctionName)){
-
-                completeCall(event.dataPayload, event);
-                return true;
-            }
-
-            return false;
-        }
     }
 
     private static final TLog _log = TLog.get(BptApi.class);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      /*
+        if(funcArgs.length > 0) {
+            StringBuffer buf = new StringBuffer(funcArgs.length);
+            for (int i = 0; i < funcArgs.length - 1; i++) {
+
+                String a = TextUtils.isEmpty(funcArgs[i]) ? "" : funcArgs[i];
+                buf.append(a);
+                buf.append(",");
+            }
+            buf.append(funcArgs[funcArgs.length - 1]);
+            funcArgsStr = buf.toString();
+        } else {
+            funcArgsStr = "";
+        }
+        */
+
+
+// listens for data updates on the URI and invokes the callbacks
+// new Handler(Looper.getMainLooper())
+
+//Handler h = new Handler();
+//
+//        Handler h = new Handler(ht.getLooper()) {
+//
+//
+//
+//
+//
+//            public void handleMessage(Message msg) {
+//                _log.d("handleMessage " + msg.what + " in " + Thread.currentThread());
+//            };
+//
+//
+//
+//        };
+
+
+
+// final FunctionObserver observer = new FunctionObserver(this.getContext(), h, function, callback);
+
+
+//this.getContext().getContentResolver().registerContentObserver(uri, false, observer);
+
+/*
+        Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, Void>(){
+
+            @Override
+            public Void callApi(ParticleCloud cloud) throws ParticleCloudException, IOException {
+                ParticleDevice device = cloud.getDevice(deviceId);
+
+                List<String> a = new ArrayList<>(1);
+                a.add( funcArgsStr );
+
+                subscribeToDeviceEvents(cloud);
+
+                try {
+                    int result = device.callFunction(funcName, a);
+
+                    Message m = Message.obtain(functionHandler);
+                    m.what = FunctionHandler.MSG_SEND_FUNCTION_RESULT;
+                    m.arg1 = result;
+
+                    m.sendToTarget();
+
+                    //observer.updateAndSendResult(result);
+
+                    //updateFunctionUri(uri, RESULT_SOURCE_FUNCTION, result, null);
+                    //callback.onFunctionResult(function, RESULT_SOURCE_FUNCTION, Integer.toString(result));
+
+                } catch (ParticleDevice.FunctionDoesNotExistException e) {
+                    _log.w("call - " + e.getMessage());
+
+
+                    Message m = Message.obtain(functionHandler);
+                    m.what = FunctionHandler.MSG_SEND_FUNCTION_ERROR;
+                    m.getData().putString(FunctionHandler.MSG_DATA_ERROR, e.getMessage());
+
+                    m.sendToTarget();
+
+
+                    //observer.sendErrorToCallback(e.getMessage());
+
+                    //callback.onFunctionError(function, e.getMessage());
+
+                }
+
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Void aVoid) { }
+
+            @Override
+            public void onFailure(ParticleCloudException e) {
+                _log.e("onFailure called - " + e.getBestMessage());
+
+                Message m = Message.obtain(functionHandler);
+                m.what = FunctionHandler.MSG_SEND_FUNCTION_ERROR;
+                m.getData().putString(FunctionHandler.MSG_DATA_ERROR, e.getMessage());
+
+                m.sendToTarget();
+
+                //observer.sendErrorToCallback(e.getMessage());
+            }
+        });
+
+        */
+
+
+
+
+
+//
+//    /**
+//     * Retrieves data from the function content provider and invokes the callback with the result.
+//     */
+//    private static class FunctionObserver2 extends ContentObserver {
+//
+//        private Function mFunction;
+//        private Context mContext;
+//        private ResultCallback mCallback;
+//        private int mFunctionResult;
+//
+//        private static final String[] COLUMNS = { DeviceFunctionCallEntry.COLUMN_EVENT_DATA };
+//        public static final int COL_EVENT_DATA = 0;
+//
+//        public FunctionObserver2(Context context, Handler handler, Function function, ResultCallback callback){
+//            super(handler);
+//
+//            mFunction = function;
+//            mContext = context;
+//            mCallback = callback;
+//            mFunctionResult = 0;
+//        }
+//
+//        /**
+//         * The invocation of the callback will be deferred until the event arrives if
+//         * the function expects it (doReceiveEvents() is true)
+//         * @param result    The function result code
+//         */
+//        public void updateAndSendResult(int result){
+//            _log.v("updateAndSendResult called " + result + " [receiveEvents=" +
+//                    mFunction.doReceiveEvents() + "]");
+//
+//            if(!mFunction.doReceiveEvents()){
+//                unRegister();
+//
+//                ContentValues v = new ContentValues();
+//                v.put(DeviceFunctionCallEntry.COLUMN_FUNCTION_RETURN, result);
+//                mContext.getContentResolver().update(mFunction.getUri(), v, null, null);
+//
+//                mCallback.onFunctionResult(mFunction, result, null);
+//
+//            }else{
+//                // save result until the event comes in, or a timeout happens: TODO
+//                mFunctionResult = result;
+//            }
+//        }
+//
+//        public void sendErrorToCallback(String error) {
+//            mCallback.onFunctionError(mFunction, error);
+//            unRegister();
+//        }
+//
+//
+//        // Will be called when an function event is expected
+//        @Override
+//        public void onChange(boolean selfChange, Uri uri) {
+//            _log.v("onChange called for " + uri);
+//
+//            if(!uri.equals(mFunction.getUri())){
+//                _log.e("The expected URI differs with the function's URI: " +
+//                    uri.toString() + " vs " + mFunction.getUri().toString() );
+//
+//                unRegister();
+//                return;
+//            }
+//
+//            String result = null;
+//            Cursor c = mContext.getContentResolver().query(mFunction.getUri(),
+//                    COLUMNS, null, null, null);
+//
+//            if(c.moveToFirst()){
+//                result = c.getString(COL_EVENT_DATA);
+//            }
+//            c.close();
+//
+//            mCallback.onFunctionResult(mFunction, mFunctionResult, result);
+//            unRegister();
+//        }
+//
+//        private void unRegister(){
+//            mContext.getContentResolver().unregisterContentObserver(this);
+//        }
+//    }

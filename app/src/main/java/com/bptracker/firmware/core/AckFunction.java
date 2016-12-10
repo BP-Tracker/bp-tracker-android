@@ -1,18 +1,36 @@
 package com.bptracker.firmware.core;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.bptracker.firmware.Firmware.EventType;
-import com.bptracker.firmware.Firmware.Function;
+import com.bptracker.firmware.Firmware;
 
 /**
  * Author: Derek Benda
+ *
+ * Accepts {@link BptApi#ARG_EVENT_TYPE} and {@link BptApi#ARG_STRING_DATA} arguments
  */
+public class AckFunction extends Function {
 
-public class AckFunction extends BptApi {
+    public static final Parcelable.Creator<AckFunction> CREATOR = new Parcelable.Creator<AckFunction>() {
+        public AckFunction createFromParcel(Parcel in) {
+            return new AckFunction(in);
+        }
 
-    public AckFunction(Context context, String deviceId) {
-        super(context, deviceId, Function.BPT_ACK.getName());
+        public AckFunction[] newArray(int size) {
+            return new AckFunction[size];
+        }
+    };
+
+
+    protected AckFunction(Parcel in) {
+        super(in);
+    }
+
+    public AckFunction(String deviceId) {
+        super(Firmware.Function.BPT_ACK.getName(), deviceId);
     }
 
     @Override
@@ -27,6 +45,12 @@ public class AckFunction extends BptApi {
         }
     }
 
+
+    /**
+     * Adds arguments to this function
+     * @param argumentId   Accepts {@link BptApi#ARG_EVENT_TYPE} and {@link BptApi#ARG_STRING_DATA}
+     * @param arg          The arguments value
+     */
     @Override
     public void addArgument(int argumentId, Object arg) {
 
@@ -43,7 +67,7 @@ public class AckFunction extends BptApi {
             }catch (ClassCastException e) {
                 throw new IllegalArgumentException("Argument is not a EventType object");
             }
-        }else if(argumentId == ARG_STRING_DATA){
+        }else if(argumentId == BptApi.ARG_STRING_DATA){
 
             addArgumentAtPos(2, arg.toString());
 
@@ -53,10 +77,12 @@ public class AckFunction extends BptApi {
     }
 
     @Override
-    protected void validateArgsForCall(String[] args) {
+    protected String[] validateArgs(String[] args) {
 
         if (args.length != 2) {
             throw new IllegalArgumentException("Function expects two arguments");
         }
+
+        return args;
     }
 }
