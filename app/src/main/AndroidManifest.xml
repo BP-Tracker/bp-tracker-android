@@ -4,8 +4,15 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>-->
+
+
     <uses-permission android:name="com.bptracker.permission.RECEIVE_EVENTS" />
     <uses-permission android:name="com.bptracker.permission.RECEIVE_DEVICE_EVENTS" />
+    <uses-permission android:name="com.bptracker.permission.RUN_DEVICE_FUNCTION" />
+
+    <uses-feature android:name="android.hardware.location.gps" />
 
     <!--
     https://github.com/codepath/android_guides/wiki/Starting-Background-Services
@@ -36,6 +43,19 @@
         android:description="@string/perm_receive_device_events_desc"
         android:label="@string/perm_receive_device_events_label"
         android:protectionLevel="signature" />
+
+    <!--
+        Allows external applications the ability to run functions on a device.
+        See ExternalService.
+
+        Support actions: com.bptracker.intent.action.RUN_DEVICE_FUNCTION
+    -->
+    <permission
+        android:name="com.bptracker.permission.RUN_DEVICE_FUNCTION"
+        android:description="@string/perm_run_device_function_desc"
+        android:label="@string/perm_run_device_function_label"
+        android:protectionLevel="signature" />
+
 
     <application
         android:name=".TrackerApplication"
@@ -72,8 +92,23 @@
             android:name=".service.LoadDevicesService"
             android:exported="false" />
         <service
-            android:name=".service.DeviceEventService"
+            android:name=".service.RunFunctionService"
             android:exported="false" />
+        <service
+            android:name=".service.DeviceEventService"
+            android:singleUser="true"
+            android:exported="false" />
+
+        <service
+            android:name=".service.ExternalService"
+            android:permission="com.bptracker.permission.RUN_DEVICE_FUNCTION"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="com.bptracker.intent.action.RUN_DEVICE_FUNCTION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
 
         <receiver
             android:name=".receiver.BootCompletedReceiver"

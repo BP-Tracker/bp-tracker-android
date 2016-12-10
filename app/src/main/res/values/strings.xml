@@ -8,6 +8,9 @@
     <string name="perm_receive_device_events_label">Receive particle.io device events</string>
     <string name="perm_receive_device_events_desc">Receive particle.io device events</string>
 
+    <string name="perm_run_device_function_desc">Run arbitrary particle.io device functions</string>
+    <string name="perm_run_device_function_label">Run arbitrary particle.io device functions</string>
+
 
     <string name="intro_text">Intro text for BP Tracker</string>
 

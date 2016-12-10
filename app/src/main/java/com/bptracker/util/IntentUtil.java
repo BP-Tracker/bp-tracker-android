@@ -1,5 +1,9 @@
 package com.bptracker.util;
 
+import android.support.annotation.RequiresPermission;
+
+import com.bptracker.Manifest;
+
 /**
  * Author: Derek Benda
  */
@@ -7,7 +11,7 @@ package com.bptracker.util;
 public class IntentUtil {
 
     /**
-     * This ordered broadcast action forwards incoming device events from the particle.io cloud
+     * This broadcast action forwards incoming device events from the particle.io cloud
      *
      * Extras: EXTRA_FROM_BPT_DEVICE, EXTRA_DEVICE_ID, EVENT_NAME, EXTRA_EVENT_DATA,
      *         EXTRA_DEVICE_NAME
@@ -18,6 +22,7 @@ public class IntentUtil {
      *
      * URI format: content://com.bptracker/events/[event_id]
      */
+    @RequiresPermission(Manifest.permission.RECEIVE_DEVICE_EVENTS)
     public static final String ACTION_DEVICE_EVENT = "com.bptracker.intent.action.DEVICE_EVENT";
 
 
@@ -28,11 +33,27 @@ public class IntentUtil {
      *         EXTRA_DEVICE_NAME
      *
      *
-     * Requires permission: PERMISSION_RECEIVE_BPT_EVENTS
-     *
      * URI format: content://devices/[cloud_device_id]/bpt-events/[event_id]
      */
+    @RequiresPermission(Manifest.permission.RECEIVE_EVENTS)
     public static final String ACTION_BPT_EVENT = "com.bptracker.intent.action.BPT_EVENT";
+
+
+    /**
+     * This is for local broadcasts. Receives function call results from a call to RunFunctionService
+     *
+     * Extras: EXTRA_FUNCTION, EXTRA_FUNCTION_RESULT, EXTRA_FUNCTION_EVENT_RESULT (if available),
+     *         EXTRA_FUNCTION_ERROR (if an error occurred)
+     */
+    public static final String ACTION_FUNCTION_RESULT = "com.bptracker.intent.action.FUNCTION_RESULT";
+
+
+    /**
+     * Service action for ExternalService`
+     *
+     */
+    @RequiresPermission(Manifest.permission.RUN_DEVICE_FUNCTION)
+    public static final String ACTION_RUN_DEVICE_FUNCTION = "com.bptracker.intent.action.RUN_DEVICE_FUNCTION";
 
 
     /********************************************************
@@ -49,6 +70,17 @@ public class IntentUtil {
     // the device name (if available)
     public static final String EXTRA_DEVICE_NAME = "com.bpt.intent.extra.DEVICE_NAME";
 
+
+    // The BptApi Function
+    public static final String EXTRA_FUNCTION = "com.bpt.intent.extra.FUNCTION";
+
+    public static final String EXTRA_FUNCTION_RESULT = "com.bpt.intent.extra.FUNCTION_RESULT";
+
+    public static final String EXTRA_FUNCTION_EVENT_RESULT = "com.bpt.intent.extra.FUNCTION_EVENT_RESULT";
+
+
+    public static final String EXTRA_ERROR = "com.bpt.intent.extra.ERROR";
+
     // the particle.io assigned device ID
     public static final String EXTRA_DEVICE_ID = "com.bpt.intent.extra.DEVICE_ID";
 
@@ -63,10 +95,12 @@ public class IntentUtil {
      Intent permissions
      *******************************************************/
 
-    // NB: these are hard-coded in the manifest
-    public static final String PERMISSION_RECEIVE_EVENTS = "com.bptracker.permission.RECEIVE_EVENTS";
+    public static final String PERMISSION_RECEIVE_EVENTS = Manifest.permission.RECEIVE_EVENTS;
 
     public static final String PERMISSION_RECEIVE_DEVICE_EVENTS
-                                     = "com.bptracker.permission.RECEIVE_DEVICE_EVENTS";
+                                            = Manifest.permission.RECEIVE_DEVICE_EVENTS;
+
+    public static final String PERMISSION_RUN_DEVICE_FUNCTION
+                                            = Manifest.permission.RUN_DEVICE_FUNCTION;
 
 }
