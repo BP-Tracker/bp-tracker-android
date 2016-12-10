@@ -37,18 +37,6 @@ public class DeviceActivity extends Activity {
         }
 
 
-        Uri uri = Uri.parse("content://com.bptracker/devices/42003b000251353337353037/bpt-events/66");
-        Intent i = new Intent(IntentUtil.ACTION_BPT_EVENT, uri);
-        i.putExtra(IntentUtil.EXTRA_FROM_BPT_DEVICE, true );
-
-        i.putExtra(IntentUtil.EXTRA_DEVICE_ID, "42003b000251353337353037");
-        i.putExtra(IntentUtil.EXTRA_EVENT_NAME, "bpt:event");
-        i.putExtra(IntentUtil.EXTRA_EVENT_DATA, "0,7,7");
-        i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, "Pippy");
-        i.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, Firmware.EventType.STATE_CHANGE);
-
-        sendBroadcast(i, IntentUtil.PERMISSION_RECEIVE_EVENTS);
-
         _log.d("Send broadcast");
 
     }
@@ -87,3 +75,17 @@ public class DeviceActivity extends Activity {
 
     private static final TLog _log = TLog.get(DeviceActivity.class);
 }
+
+/*
+
+    Uri uri = Uri.parse("content://com.bptracker/devices/343434/bpt-events/66");
+    Intent i = new Intent(IntentUtil.ACTION_BPT_EVENT, uri);
+i.putExtra(IntentUtil.EXTRA_FROM_BPT_DEVICE, true );
+
+        i.putExtra(IntentUtil.EXTRA_DEVICE_ID, "3434");
+        i.putExtra(IntentUtil.EXTRA_EVENT_NAME, "bpt:event");
+        i.putExtra(IntentUtil.EXTRA_EVENT_DATA, "0,7,7");
+        i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, "Pippy");
+        i.putExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE, Firmware.EventType.STATE_CHANGE);
+
+        sendBroadcast(i, IntentUtil.PERMISSION_RECEIVE_EVENTS);*/
