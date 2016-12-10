@@ -116,26 +116,17 @@ public class BptProvider extends ContentProvider {
 
 
     // for MATCHER_BPT_FUNCTION_CALLS_ID and MATCHER_BPT_FUNCTION_CALLS URIs
+    // and MATCHER_BY_FUNCTION_CALLS_ID
     @Nullable
     private Cursor queryBptFunctionCall(Uri uri, String[] projection, String selection,
                                      String[] selectionArgs, String sortOrder){
 
         int match = uriMatcher.match(uri);
 
-        if(match != MATCHER_BPT_FUNCTION_CALLS_ID && match != MATCHER_BPT_FUNCTION_CALLS){
-            throw new UnsupportedOperationException("URI not supported: " + uri);
-        }
-
-        String cloudDeviceId = DeviceFunctionCallEntry.getCloudDeviceIdFromUri(uri);
-        if ( TextUtils.isEmpty( cloudDeviceId ) ) {
-            throw new UnsupportedOperationException(
-                    "Cannot find cloud device ID from uri: " + uri);
-        }
-
         ArrayList<String> sArgs = selectionArgs != null
                 ? new ArrayList<String>(Arrays.asList(selectionArgs)) : new ArrayList<String>();
 
-        StringBuffer buffer = new StringBuffer(selection);
+        StringBuffer buffer = new StringBuffer(selection != null ? selection : "");
 
         if(!TextUtils.isEmpty(selection)){
             buffer.append(" and ");
@@ -144,20 +135,46 @@ public class BptProvider extends ContentProvider {
 
         if(match == MATCHER_BPT_FUNCTION_CALLS_ID){
             long id = DeviceFunctionCallEntry.getIdFromUri(uri);
+
             if(id < 0){
                throw new UnsupportedOperationException("URI is missing function call id:  " + uri);
             }
 
+            String cloudDeviceId = DeviceFunctionCallEntry.getCloudDeviceIdFromUri(uri);
+            if ( TextUtils.isEmpty( cloudDeviceId ) ) {
+                throw new UnsupportedOperationException("Cannot find cloud device ID from uri: " + uri);
+            }
+
             sArgs.add(Long.toString(id));
+            sArgs.add(cloudDeviceId);
 
-            buffer.append(" " + DeviceFunctionCallEntry.TABLE_NAME + "."
-                    + DeviceFunctionCallEntry._ID + " = ? and");
+            buffer.append(DeviceFunctionCallEntry.TABLE_NAME + "."
+                    + DeviceFunctionCallEntry._ID + " = ? and " +
+                    DeviceFunctionCallEntry.TABLE_NAME +
+                            "." + DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + " = ? ");
 
+        }else if(match == MATCHER_BPT_FUNCTION_CALLS){
+
+            String cloudDeviceId = DeviceFunctionCallEntry.getCloudDeviceIdFromUri(uri);
+            if ( TextUtils.isEmpty( cloudDeviceId ) ) {
+                throw new UnsupportedOperationException("Cannot find cloud device ID from uri: " + uri);
+            }
+
+            sArgs.add(cloudDeviceId);
+            buffer.append(DeviceFunctionCallEntry.TABLE_NAME +
+                    "." + DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + " = ? ");
+
+        }else if(match == MATCHER_BY_FUNCTION_CALLS_ID){
+
+            long id = DeviceFunctionCallEntry.getIdFromUri(uri);
+
+            sArgs.add(Long.toString(id));
+            buffer.append(DeviceFunctionCallEntry.TABLE_NAME + "."
+                    + DeviceFunctionCallEntry._ID + " = ? ");
+
+        }else{
+            throw new UnsupportedOperationException("URI not supported: " + uri);
         }
-
-        sArgs.add(cloudDeviceId);
-        buffer.append(DeviceFunctionCallEntry.TABLE_NAME +
-                "." + DeviceFunctionCallEntry.COLUMN_CLOUD_DEVICE_ID + " = ? ");
 
 
         Cursor c = bptFunctionCallQueryBuilder.query(databaseHelper.getReadableDatabase(),
@@ -303,7 +320,8 @@ public class BptProvider extends ContentProvider {
 
 
         if (match == MATCHER_BPT_FUNCTION_CALLS
-                || match == MATCHER_BPT_FUNCTION_CALLS_ID) {
+                || match == MATCHER_BPT_FUNCTION_CALLS_ID
+                || match == MATCHER_BY_FUNCTION_CALLS_ID) {
 
            c = queryBptFunctionCall(uri, projection, selection, selectionArgs, sortOrder);
 
