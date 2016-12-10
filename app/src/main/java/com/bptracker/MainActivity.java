@@ -62,42 +62,8 @@ public class MainActivity extends Activity
             app.requestLocationPermission(this);
         }
 
-
-        /*
-        locationProvider = new LocationProvider(this);
-
-
-        locationProvider.getLocation(new LocationProvider.Callback() {
-            @Override
-            public void onLocation(LocationProvider p, Location location) {
-                _log.d("onLocation" + location);
-            }
-
-            @Override
-            public void onLocationError(LocationProvider p, int requestCode, @Nullable ConnectionResult result) {
-                _log.d("onLocationError " + requestCode );
-
-                if (result != null) {
-                    _log.d("error code = " + result.getErrorCode());
-                    switch(result.getErrorCode()){
-                        case ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED:
-                            //GoogleApiActivity.
-
-
-                    }
-
-                }
-
-            }
-        });
-    */
-
-
-
         //Intent intent = new Intent(this, LoadDevicesService.class);
         //startService(intent);
-
-
     }
 
     @Override
@@ -136,6 +102,46 @@ public class MainActivity extends Activity
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+     /*
+        locationProvider = new LocationProvider(this);
+
+
+        locationProvider.getLocation(new LocationProvider.Callback() {
+            @Override
+            public void onLocation(LocationProvider p, Location location) {
+                _log.d("onLocation" + location);
+            }
+
+            @Override
+            public void onLocationError(LocationProvider p, int requestCode, @Nullable ConnectionResult result) {
+                _log.d("onLocationError " + requestCode );
+
+                if (result != null) {
+                    _log.d("error code = " + result.getErrorCode());
+                    switch(result.getErrorCode()){
+                        case ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED:
+                            //GoogleApiActivity.
+
+
+                    }
+
+                }
+
+            }
+        });
+    */
 
 
 

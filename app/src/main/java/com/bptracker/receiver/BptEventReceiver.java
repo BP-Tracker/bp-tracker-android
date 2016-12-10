@@ -8,122 +8,81 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-
-import io.particle.android.sdk.utils.TLog;
 
 import com.bptracker.R;
 import com.bptracker.SelectStateActivity;
 import com.bptracker.data.LocationProvider;
-import com.bptracker.firmware.Firmware.Function;
+import com.bptracker.firmware.Firmware;
 import com.bptracker.firmware.Firmware.EventType;
 import com.bptracker.firmware.core.BptApi;
+import com.bptracker.firmware.core.Function;
+import com.bptracker.service.RunFunctionService;
 import com.bptracker.util.IntentUtil;
 import com.google.android.gms.common.ConnectionResult;
 
-import static com.bptracker.firmware.Firmware.EventType.REQUEST_GPS;
-import static com.bptracker.firmware.Firmware.EventType.SERIAL_COMMAND;
-import static com.bptracker.firmware.Firmware.EventType.STATE_CHANGE;
+import io.particle.android.sdk.utils.TLog;
 
 /**
  * Author: Derek Benda
  *
  * A broker for device events such as REQUEST_GPS and PANIC bpt:events
  */
-public class BptEventReceiver extends BroadcastReceiver implements LocationProvider.Callback {
+public class BptEventReceiver extends BroadcastReceiver {
 
     @Override
-    public void onLocationError(LocationProvider p, int requestCode, @Nullable ConnectionResult result) {
-        _log.e("onLocationError");
-    }
+    public void onReceive(final Context context, Intent intent) {
 
-    /**
-     * Send this location to the requesting device
-     * @param p
-     * @param location
-     */
-    @Override
-    public void onLocation(LocationProvider p, Location location) { //TODO: ensure device is permitted to receive coordinates
-        _log.v("onLocation called");
-
-        Bundle b = p.getBundle();
-        String deviceId = b.getString("deviceId");
-
-        /*
-        BptApi api = BptApi.createInstance(p.getContext(), Function.BPT_ACK, deviceId,
-            new BptApi.ResultCallback(){
-                @Override
-                public void onFunctionResult(BptApi api, int source, String result) {
-                    _log.i("onFunctionResult: " + result);
-                }
-
-                @Override
-                public void onFunctionError(BptApi api, String reason) {
-                    _log.e("onFunctionError: " + reason);
-
-                }
-
-                @Override
-                public void onFunctionTimeout(BptApi api, int source) {
-                    _log.e("onFunctionTimeout");
-
-                }
-            });
-
-
-        float lat = Double.valueOf(location.getLatitude()).floatValue();
-        float lon = Double.valueOf(location.getLongitude()).floatValue();
-
-        api.addArgument(BptApi.ARG_EVENT_TYPE, EventType.REQUEST_GPS);
-        api.addArgument(BptApi.ARG_STRING_DATA, String.format("%f,%f", lat, lon));
-
-        api.call();
-        */
-    }
-
-
-
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
         EventType type = (EventType) intent.getSerializableExtra(IntentUtil.EXTRA_BPT_EVENT_TYPE);
         String deviceName = intent.getStringExtra(IntentUtil.EXTRA_DEVICE_NAME);
-        String deviceId = intent.getStringExtra(IntentUtil.EXTRA_DEVICE_ID);
+        final String deviceId = intent.getStringExtra(IntentUtil.EXTRA_DEVICE_ID);
         String eventData = intent.getStringExtra(IntentUtil.EXTRA_EVENT_DATA);
 
         _log.v("onReceive called on action: " + intent.getAction()
                 + " [eventType=" + type.name() + "] [eventData=" + eventData + "]");
 
-        // ack[,data1[,data2..]]
         String[] data = eventData.split(",");
 
-        EventNotification n = new EventNotification(context, deviceName + " raised a panic alarm",
-                "The last update was recorded at 5:30pm", "",  deviceId,  SelectStateActivity.class);
-
-        n.send();
-
-
-//        if(type == SERIAL_COMMAND){
-//            type = REQUEST_GPS;
-//        }
-
-
-
+        // ack[,data1[,data2..]]
         switch (type){
             case PANIC: //ack, isMoving, something, lat, log
+
+                EventNotification n = new EventNotification(context, deviceName + " raised a panic alarm",
+                        "The last update was recorded at 5:30pm", "",  deviceId,  SelectStateActivity.class);
+
+                n.send();
 
                 break;
             case REQUEST_GPS:
 
+                //TODO: ensure device is permitted to receive coordinates
 
                 // send the location to the requesting device
-                Bundle b = new Bundle(1);
-                b.putString("deviceId", deviceId);
+                LocationProvider p = new LocationProvider(context);
+                p.getLocation(new LocationProvider.Callback() {
 
-                LocationProvider p = new LocationProvider(context, b);
-                p.getLocation(this);
+                    @Override
+                    public void onLocation(LocationProvider p, Location location) {
+
+                        float lat = Double.valueOf(location.getLatitude()).floatValue();
+                        float lon = Double.valueOf(location.getLongitude()).floatValue();
+
+                        Function f = BptApi.createFunction(Firmware.Function.BPT_ACK, deviceId);
+                        f.addArgument(BptApi.ARG_EVENT_TYPE, EventType.REQUEST_GPS);
+                        f.addArgument(BptApi.ARG_STRING_DATA, String.format("%f,%f", lat, lon));
+
+                        Intent i = new Intent(context, RunFunctionService.class);
+                        i.putExtra(IntentUtil.EXTRA_FUNCTION, f);
+
+                        context.startService(i);
+                    }
+
+                    @Override
+                    public void onLocationError(LocationProvider p, int requestCode, @Nullable ConnectionResult result) {
+                        _log.e("onLocationError " + requestCode); //TODO
+                    }
+                });
 
                 break;
 
@@ -132,7 +91,6 @@ public class BptEventReceiver extends BroadcastReceiver implements LocationProvi
                 _log.i("SERIAL_COMMAND issued on " + data[1] + " [result=" + data[2] + "]");
                 break;
         }
-
     }
 
 
@@ -220,8 +178,6 @@ public class BptEventReceiver extends BroadcastReceiver implements LocationProvi
             return builder;
         }
     }
-
-
 
     private static final TLog _log = TLog.get(BptEventReceiver.class);
 }

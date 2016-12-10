@@ -25,8 +25,7 @@ import com.bptracker.util.IntentUtil;
 import io.particle.android.sdk.utils.TLog;
 
 public class SelectStateActivity extends Activity
-                                implements SelectStateFragment.SelectStateListener,
-                                                        BptApi.ResultCallback {
+                                implements SelectStateFragment.SelectStateListener {
 
     private ListView mListView;
     private String mCloudDeviceId;
@@ -64,22 +63,8 @@ public class SelectStateActivity extends Activity
     @Override
     public void onStateSelect(DialogFragment dialog, State state) {
 
-        //TODO:
-        //BptApi f = BptApi.createInstance(this, Function.BPT_STATE, mCloudDeviceId, this);
-        //f.addArgument(BptApi.ARG_STATE, State.PAUSED);
-
-
-        //BptApi f = BptApi.createInstance(this, Function.BPT_ACK, mCloudDeviceId, this);
-
-
-        /*
         Function f = BptApi.createFunction(Firmware.Function.BPT_STATE, mCloudDeviceId);
-
-        BptApi.call(f, this);
-        */
-
-
-        Function f = BptApi.createFunction(Firmware.Function.BPT_STATE, mCloudDeviceId);
+        f.addArgument(BptApi.ARG_STATE, state);
         f.finalizeArguments();
 
         Intent i = new Intent(this, RunFunctionService.class);
@@ -106,31 +91,8 @@ public class SelectStateActivity extends Activity
 
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
 
-
-
         startService(i);
 
-
-  /*
-        f.addArgument(BptApi.ARG_EVENT_TYPE, Firmware.EventType.NO_GPS_SIGNAL);
-        f.addArgument(BptApi.ARG_STRING_DATA, "1");
-*/
-
-        //StateFunction stateFn = new StateFunction(mCloudDeviceId);
-
-
-        //BptApi.getInstance().call(f, this);
-        //api.call(f, this);
-
-        //f.call()
-
-
-
-
-        //f.addArgument(BptApi.ARG_TEST_INPUT, Firmware.TestInput.INPUT_ACCEL_INT);
-        //f.addArgument(BptApi.ARG_STRING_DATA, "1");
-       // f.addArgument(BptApi.ARG_SOFTWARE_RESET, true);
-       // f.call();
 
         Toast.makeText(this, "Request sent", Toast.LENGTH_SHORT).show();
         finishAndRemoveTask();
@@ -138,32 +100,9 @@ public class SelectStateActivity extends Activity
 
     @Override
     public void onStateCancel(DialogFragment dialog) {
-
         //Toast.makeText(this, "Disarm cancelled", Toast.LENGTH_SHORT).show();
         finishAndRemoveTask();
     }
-
-
-
-    @Override
-    public void onFunctionError(Function function, String reason) {
-        _log.v("onFunctionError: " + reason);
-
-    }
-
-    @Override
-    public void onFunctionTimeout(Function function, int source) {
-        _log.v("onFunctionTimeout: " + source);
-
-    }
-
-    @Override
-    public void onFunctionResult(Function function, int result, String extra) {
-        _log.v("onFunctionResult [result=" + result + "] " + extra );
-
-    }
-
-
 
     private static final TLog _log = TLog.get(SelectStateActivity.class);
 }

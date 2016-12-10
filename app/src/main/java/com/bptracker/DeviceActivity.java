@@ -13,8 +13,6 @@ import io.particle.android.sdk.utils.TLog;
 
 public class DeviceActivity extends Activity {
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,10 +33,6 @@ public class DeviceActivity extends Activity {
                     .add(R.id.device_detail_container, fragment)
                     .commit();
         }
-
-
-        _log.d("Send broadcast");
-
     }
 
 
@@ -75,6 +69,20 @@ public class DeviceActivity extends Activity {
 
     private static final TLog _log = TLog.get(DeviceActivity.class);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 
