@@ -40,7 +40,7 @@ public class DeviceEventService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        _log.d("onStartCommand called");
+        _log.v("onStartCommand called");
 
         // This is required so the service can continue to listen to cloud events
         // serviceNotification = new ServiceNotification("BP Tracker", "Tracking events from the cloud", MainActivity.class);
@@ -61,14 +61,14 @@ public class DeviceEventService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        _log.d("onBind called");
+        _log.v("onBind called");
         return null;
     }
 
 
     @Override
     public void onDestroy() {
-        _log.d("onDestroy called");
+        _log.v("onDestroy called");
         super.onDestroy();
     }
 
@@ -205,7 +205,7 @@ public class DeviceEventService extends Service {
 
         @Override
         public void onFailure(ParticleCloudException e) {
-            _log.d("onFailure");
+            _log.v("onFailure");
             e.printStackTrace();
 
             // TODO: how to handle UnknownHostException?
