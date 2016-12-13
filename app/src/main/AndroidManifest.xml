@@ -5,8 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>-->
-
+    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/> -->
 
     <uses-permission android:name="com.bptracker.permission.RECEIVE_EVENTS" />
     <uses-permission android:name="com.bptracker.permission.RECEIVE_DEVICE_EVENTS" />
@@ -56,7 +55,6 @@
         android:label="@string/perm_run_device_function_label"
         android:protectionLevel="signature" />
 
-
     <application
         android:name=".TrackerApplication"
         android:allowBackup="true"
@@ -90,22 +88,26 @@
 
         <service
             android:name=".service.LoadDevicesService"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.bptracker.intent.action.LOAD_DEVICES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
         <service
             android:name=".service.RunFunctionService"
             android:exported="false" />
         <service
             android:name=".service.DeviceEventService"
-            android:singleUser="true"
-            android:exported="false" />
-
+            android:exported="false"
+            android:singleUser="true" />
         <service
             android:name=".service.ExternalService"
-            android:permission="com.bptracker.permission.RUN_DEVICE_FUNCTION"
-            android:exported="true">
-
+            android:exported="true"
+            android:permission="com.bptracker.permission.RUN_DEVICE_FUNCTION">
             <intent-filter>
                 <action android:name="com.bptracker.intent.action.RUN_DEVICE_FUNCTION" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
@@ -137,10 +139,27 @@
         </receiver>
         -->
 
-        <!-- @style/Theme.AppCompat.Translucent android:theme="@android:style/Theme.Translucent"  -->
 
-        <activity android:name=".SelectStateActivity" android:theme="@style/AppTheme.Transparent"
-            ></activity>
+        <!-- @style/Theme.AppCompat.Translucent android:theme="@android:style/Theme.Translucent" -->
+
+        <activity
+            android:name=".SelectStateActivity"
+            android:theme="@style/AppTheme.Transparent" />
+        <!--
+             The API key for Google Maps-based APIs is defined as a string resource.
+             (See the file "res/values/google_maps_api.xml").
+             Note that the API key is linked to the encryption key used to sign the APK.
+             You need a different API key for each encryption key, including the release key that is used to
+             sign the APK for publishing.
+             You can define the keys for the debug and release targets in src/debug/ and src/release/. 
+        -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".DeviceLocationActivity"
+            android:label="@string/title_activity_device_location"></activity>
     </application>
 
 </manifest>
