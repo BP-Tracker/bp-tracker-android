@@ -50,6 +50,8 @@
     <string name="unnamed_device">(Unnamed device)</string>
     <string name="title_activity_device">DeviceActivity</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_logout">Log Out</string>
+    <string name="title_activity_device_location">Map</string>
 
 
 </resources>

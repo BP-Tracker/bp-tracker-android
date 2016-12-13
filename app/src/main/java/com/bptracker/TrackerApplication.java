@@ -4,9 +4,11 @@ import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.widget.Toast;
 
 import com.bptracker.firmware.core.BptApi;
 
@@ -23,13 +25,11 @@ public class TrackerApplication extends Application {
 
     @Override
     public void onCreate() {
-        _log.d("onCreate");
-
         super.onCreate();
+        _log.v("onCreate");
 
         ParticleCloudSDK.init(this);
         BptApi.init(this);
-        //ParticleDeviceSetupLibrary.init(this, MainActivity.class);
     }
 
 
@@ -46,6 +46,19 @@ public class TrackerApplication extends Application {
         }
 
         return false;
+    }
+
+
+    public boolean logoutAndRedirect(){
+        ParticleCloud cloud = ParticleCloudSDK.getCloud();
+        cloud.logOut();
+
+        Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+
+        Intent i = new Intent(this, LoginActivity.class);
+        startActivity(i);
+
+        return true;
     }
 
     public void requestLocationPermission(Activity activity) {

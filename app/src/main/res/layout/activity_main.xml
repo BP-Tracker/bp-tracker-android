@@ -7,24 +7,26 @@
     android:orientation="vertical"
     tools:context="com.bptracker.MainActivity">
 
-    <LinearLayout
+   <!-- <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal">-->
 
-        <ImageView
+        <!--android:layout_height="?attr/actionBarSize"-->
+
+       <!-- <ImageView
             android:id="@+id/brand_image_header"
             android:layout_width="0dp"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="wrap_content"
             android:layout_gravity="left|top"
             android:layout_weight="1"
             android:background="@color/shaded_background"
             android:padding="12dp"
             android:scaleType="fitStart"
-            android:src="@drawable/tracker_image_horizontal"/>
+            android:src="@drawable/tracker_image_horizontal"/>-->
 
         <!-- fontPath="@string/bold_text_font_name" -->
-        <TextView
+        <!--<TextView
             android:id="@+id/action_log_out"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -35,10 +37,19 @@
             android:text="Log Out"
             android:textAllCaps="true"
             android:textSize="@dimen/material_text_size_body_button"
-            tools:ignore="MissingPrefix"/>
+            tools:ignore="MissingPrefix"/>-->
+<!--
+    </LinearLayout>-->
 
-    </LinearLayout>
 
+    <Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/colorPrimary"
+        android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
+        android:popupTheme="@android:style/Theme.Material.Light"
+        android:minHeight="?android:attr/actionBarSize"
+        android:id="@+id/toolbar" />
 
     <fragment
         android:id="@+id/fragment_device_list"

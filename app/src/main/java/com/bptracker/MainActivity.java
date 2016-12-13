@@ -1,30 +1,16 @@
 package com.bptracker;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toolbar;
 
 import com.bptracker.data.LocationProvider;
-import com.bptracker.firmware.Firmware;
-import com.bptracker.firmware.core.BptApi;
-import com.bptracker.firmware.core.Function;
 import com.bptracker.fragment.DeviceListFragment;
 import com.bptracker.service.DeviceEventService;
-import com.bptracker.service.LoadDevicesService;
-import com.bptracker.service.RunFunctionService;
-import com.bptracker.util.IntentUtil;
 import com.bptracker.util.Utils;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiActivity;
 
 import io.particle.android.sdk.utils.TLog;
 
@@ -49,6 +35,11 @@ public class MainActivity extends Activity
        // Async.executeAsync(ParticleCloudSDK.getCloud(),
        //         new LoadDevicesTask(this));
 
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setActionBar(toolbar);
+
+
         //TODO: this should probably be executed from an AlarmBroadcastReceiver
         if (!Utils.isServiceRunning(DeviceEventService.class, this)) {
             _log.d("DeviceEventService is not running, launching service");
@@ -61,6 +52,17 @@ public class MainActivity extends Activity
         if(!app.hasLocationPermission()){
             app.requestLocationPermission(this);
         }
+
+
+        /*
+        Intent i = new Intent(this, DeviceLocationActivity.class);
+        i.putExtra(IntentUtil.EXTRA_LAT_LNG, new LatLng(200, -82));
+        i.putExtra(IntentUtil.EXTRA_DEVICE_ID, "23423434");
+        i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, "Pippy");
+        i.putExtra(IntentUtil.EXTRA_INFO, "More Info");
+        startActivity(i);
+        */
+
 
         //Intent intent = new Intent(this, LoadDevicesService.class);
         //startService(intent);

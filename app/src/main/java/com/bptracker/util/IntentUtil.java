@@ -49,6 +49,16 @@ public class IntentUtil {
 
 
     /**
+     * A local service to load and sync devices from the particle cloud. The service send
+     * a local broadcast with this action when the data has been synced successfully or an error
+     * occurred.
+     *
+     * Extras: EXTRA_ACTION_SUCCESS, EXTRA_ACTION_ERROR, EXTRA_INFO
+     */
+    public static final String ACTION_LOAD_DEVICES = "com.bptracker.intent.action.LOAD_DEVICES";
+
+
+    /**
      * Service action for ExternalService`
      *
      */
@@ -58,6 +68,7 @@ public class IntentUtil {
 
     /********************************************************
        Extras for the above actions
+       All data types are String unless documented otherwise
      *******************************************************/
 
     // the name of the event
@@ -70,15 +81,26 @@ public class IntentUtil {
     // the device name (if available)
     public static final String EXTRA_DEVICE_NAME = "com.bpt.intent.extra.DEVICE_NAME";
 
+    // LatLng data type
+    public static final String EXTRA_LAT_LNG = "com.bpt.intent.extra.LAT_LNG";
+
+    public static final String EXTRA_INFO = "com.bpt.intent.extra.INFO";
 
     // The BptApi Function
     public static final String EXTRA_FUNCTION = "com.bpt.intent.extra.FUNCTION";
 
+    // int datatype? TODO
     public static final String EXTRA_FUNCTION_RESULT = "com.bpt.intent.extra.FUNCTION_RESULT";
 
     public static final String EXTRA_FUNCTION_EVENT_RESULT = "com.bpt.intent.extra.FUNCTION_EVENT_RESULT";
 
+    // boolean indicating the request was performed successfully
+    // if it, false the reason will be in EXTRA_ACTION_ERROR
+    public static final String EXTRA_ACTION_SUCCESS = "com.bpt.intent.extra.ACTION_SUCCESS";
 
+    public static final String EXTRA_ACTION_ERROR = "com.bpt.intent.extra.ACTION_ERROR";
+
+    // TODO: deprecate this in favor of EXTRA_REQUEST_ERROR
     public static final String EXTRA_ERROR = "com.bpt.intent.extra.ERROR";
 
     // the particle.io assigned device ID

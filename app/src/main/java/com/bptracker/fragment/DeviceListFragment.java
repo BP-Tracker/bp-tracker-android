@@ -2,13 +2,18 @@ package com.bptracker.fragment;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,14 +24,18 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.bptracker.R;
+import com.bptracker.TrackerApplication;
 import com.bptracker.adapter.DeviceListAdapter;
 import com.bptracker.data.BptContract;
 import com.bptracker.service.LoadDevicesService;
+import com.bptracker.util.IntentUtil;
 
 import io.particle.android.sdk.utils.TLog;
 
 
-public class DeviceListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DeviceListFragment extends Fragment
+        implements LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
+
 
     // when a device is selected
     public interface Callbacks {
@@ -43,10 +52,12 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        _log.d("onCreateView called");
-        // Inflate the layout for this fragment
+        _log.v("onCreateView called");
+
         View rootView = inflater.inflate(R.layout.fragment_device_list, container, false);
 
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         adapter = new DeviceListAdapter(getActivity(), null, 0);
 
@@ -57,12 +68,12 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                _log.d("onItemClick for device [position=" + position + "]");
+                _log.v("onItemClick for device [position=" + position + "]");
 
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 long id = cursor.getLong(COL_DEVICE_ENTRY_ID);
                 if (cursor != null) {
-                    _log.d("Device entry ID = " + id);
+                    _log.v("Device entry ID = " + id);
 
                     ((Callbacks) getActivity())
                             .onDeviceSelected(BptContract.DeviceEntry.buildDeviceUri(id));
@@ -71,6 +82,18 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
         });
 
         return rootView;
+    }
+
+    // SwipeRefreshLayout.OnRefreshListener
+    @Override
+    public void onRefresh() {
+        _log.v("onRefresh called");
+
+        if(mIsRefreshing){
+            return;
+        }
+
+        refreshDevicesFromCloud();
     }
 
     @Override
@@ -97,7 +120,6 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
     // LoaderManager.LoaderCallbacks
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
         _log.d("onCreateLoader called");
 
         return new CursorLoader(getActivity(),
@@ -123,6 +145,7 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        _log.v("onCreateOptionsMenu called");
         inflater.inflate(R.menu.device_list_menu, menu);
     }
 
@@ -134,6 +157,9 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
         if(id == R.id.action_refresh){
             refreshDevicesFromCloud();
             return true;
+        } else if (id == R.id.action_logout) {
+            logoutAndRedirectToLogin();
+            return true;
         }
 
        /* if (id == R.id.action_map) {
@@ -143,14 +169,51 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
         return super.onOptionsItemSelected(item);
     }
 
+    private void logoutAndRedirectToLogin(){ // TODO: add confirmation dialog
+        _log.v("logoutAndRedirectToLogin called");
+
+        TrackerApplication tracker = (TrackerApplication) getActivity().getApplicationContext();
+
+        getActivity().finishAndRemoveTask();
+        tracker.logoutAndRedirect();
+    }
+
 
     private void refreshDevicesFromCloud(){
-        _log.d("refreshDevicesFromCloud called");
+        _log.v("refreshDevicesFromCloud called");
+
+        if (mIsRefreshing) {
+            _log.w("refresh is already is in progress");
+            return;
+        }
+
+        mIsRefreshing = true;
 
         Intent intent = new Intent(getActivity(), LoadDevicesService.class);
         getActivity().startService(intent);
-    }
 
+        final BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mIsRefreshing = false;
+                mSwipeRefreshLayout.setRefreshing(false);
+
+                if(!intent.getBooleanExtra(IntentUtil.EXTRA_ACTION_SUCCESS, false)){
+                    _log.w("cannot refresh devices: " + intent.getStringExtra(IntentUtil.EXTRA_ACTION_ERROR));
+                }
+
+                LocalBroadcastManager.getInstance(DeviceListFragment.this.getActivity())
+                        .unregisterReceiver(this);
+            }
+        };
+
+        IntentFilter filter = new IntentFilter(IntentUtil.ACTION_LOAD_DEVICES);
+        LocalBroadcastManager.getInstance(this.getActivity())
+                .registerReceiver(receiver, filter);
+
+        //Intent intent = new Intent(getActivity(), LoadDevicesService.class);
+        //getActivity().startService(intent);
+    }
 
 
     // Specify the columns we need.
@@ -163,7 +226,6 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
             BptContract.DeviceEntry.COLUMN_SOFTWARE_NAME,
             BptContract.DeviceEntry.COLUMN_SOFTWARE_VERSION,
     };
-
 
     // These indices are tied to DEVICE_COLUMNS.  If DEVICE_COLUMNS changes, these
     // must change.
@@ -180,7 +242,9 @@ public class DeviceListFragment extends Fragment implements LoaderManager.Loader
 
 
     private DeviceListAdapter adapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private ListView listView;
+    private boolean mIsRefreshing;
     private static final TLog _log = TLog.get(DeviceListFragment.class);
 }
 

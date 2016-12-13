@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/action_refresh" android:title="@string/action_refresh"
-        android:orderInCategory="100" app:showAsAction="never" />
+
+
+    <group android:orderInCategory="1" android:id="@+id/group_main">
+        <item android:id="@+id/action_refresh" android:title="@string/action_refresh"
+            android:orderInCategory="1" app:showAsAction="never"
+            android:checkable="false" />
+    </group>
+
+    <group android:orderInCategory="2" android:id="@+id/group_logout" >
+        <item android:id="@+id/action_logout" android:title="@string/action_logout"
+            android:orderInCategory="1" app:showAsAction="never" />
+    </group>
+
 
   <!--  <item android:id="@+id/action_map" android:title="@string/action_map" />-->
 
