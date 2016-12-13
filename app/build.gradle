@@ -28,7 +28,6 @@ dependencies {
     compile project(':cloudsdk')
 
     //NB: DB: needed this when importing cloudsdk
-    
 
     //compile 'com.google.android.gms:play-services:9.6.1'
 
@@ -36,17 +35,20 @@ dependencies {
     // Set this dependency to use JUnit 4 rules
     // Set this dependency to build and run Espresso tests
     // Set this dependency to build and run UI Automator tests
-    
-    //http://stackoverflow.com/questions/28641445/dependency-conflict-error-in-my-android-app-which-has-android-tests
-    compile 'com.google.android.gms:play-services:10.0.1'
 
-    compile 'org.apache.commons:commons-lang3:3.4'
+    //http://stackoverflow.com/questions/28641445/dependency-conflict-error-in-my-android-app-which-has-android-tests
+    
 
     //compile 'com.android.support:appcompat-v7:24.2.1'
+    //compile 'com.google.android.gms:play-services:10.0.1'
+    compile 'com.google.android.gms:play-services-maps:10.0.1'
+    compile 'com.google.android.gms:play-services-location:10.0.1'
+    compile 'org.apache.commons:commons-lang3:3.4'
     compile 'com.android.support:design:24.2.1'
     compile 'com.tumblr:bookends:1.0.0'
     compile 'com.android.support:recyclerview-v7:24.2.1'
-    compile 'com.android.support:support-v4:24.2.1'
+    //compile 'com.android.support:support-v4:24.2.1'
+    compile 'com.android.support:appcompat-v7:24.2.1'
     testCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
