@@ -122,49 +122,6 @@ public class SelectStateActivity extends Activity
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   /*
-        mListView = new ListView(this);
-        String[] states = {
-                "Panic",
-                "Offline",
-                "Armed"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                R.layout.select_state_row, R.id.tv_state_item_id, states);
-
-        mListView.setAdapter(adapter);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-           @Override
-           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-               TextView stateItem = (TextView) view.findViewById(R.id.tv_state_item_id);
-               Toast.makeText(SelectStateActivity.this,
-                       stateItem.getText(), Toast.LENGTH_LONG).show();
-
-               //startActivityForResult();
-
-           }
-       });
-       */
-
-
 /*
     @Override
     protected void onResume() {

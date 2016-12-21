@@ -29,7 +29,7 @@ import io.particle.android.sdk.utils.TLog;
 /**
  * Author: Derek Benda
  *
- * A broker for device events such as REQUEST_GPS and PANIC bpt:events
+ * Processes bpt:events such as REQUEST_GPS and PANIC
  */
 public class BptEventReceiver extends BroadcastReceiver {
 
@@ -92,15 +92,11 @@ public class BptEventReceiver extends BroadcastReceiver {
 
                 break;
 
-
             case SERIAL_COMMAND:
                 _log.i("SERIAL_COMMAND issued on " + data[2] + " [result=" + data[1] + "]");
                 break;
         }
     }
-
-
-
 
     private static final TLog _log = TLog.get(BptEventReceiver.class);
 }

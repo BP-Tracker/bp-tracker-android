@@ -83,7 +83,7 @@ public class LoadDevicesService extends IntentService {
 
         while (c.moveToNext()) {
             long savedDeviceId = c.getLong(0);
-            if (deviceIdMap.get(savedDeviceId) != null) {
+            if (deviceIdMap.get(savedDeviceId) == null) {
                 _log.d("device does not exist, updating is_active flag to false");
                 Uri updateUri = BptContract.DeviceEntry.buildDeviceUri(savedDeviceId);
                 int rowUpdated
@@ -106,7 +106,8 @@ public class LoadDevicesService extends IntentService {
 
     private long saveToProvider(ParticleDevice device) throws ParticleCloudException {
 
-        _log.v("saveToProvider called on cloud device ID: " + device.getID());
+        _log.v("saveToProvider called on cloud device ID: " + device.getID() + " connected: "
+                + device.isConnected() );
 
         Uri uri;
         String cloudDeviceId = device.getID();

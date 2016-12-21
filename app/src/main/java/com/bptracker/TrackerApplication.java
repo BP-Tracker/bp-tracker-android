@@ -1,16 +1,22 @@
 package com.bptracker;
 
-import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import com.bptracker.firmware.core.BptApi;
+import com.google.android.gms.gcm.GcmPubSub;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
+
+import java.io.IOException;
 
 import io.particle.android.sdk.cloud.ParticleCloud;
 import io.particle.android.sdk.cloud.ParticleCloudSDK;
@@ -22,6 +28,7 @@ import io.particle.android.sdk.utils.TLog;
 public class TrackerApplication extends Application {
 
     public static final int REQUEST_PERMISSION_LOCATION = 1;
+    private boolean mHasRegisteredGcm;
 
     @Override
     public void onCreate() {
@@ -30,6 +37,17 @@ public class TrackerApplication extends Application {
 
         ParticleCloudSDK.init(this);
         BptApi.init(this);
+
+        registerGcmService();
+    }
+
+    //TODO: is this the right place to register for GCM notifications?
+    public void registerGcmService(){
+        if (!mHasRegisteredGcm) {
+            RegisterGcmTask task = new RegisterGcmTask();
+            task.execute(this);
+            mHasRegisteredGcm = true;
+        }
     }
 
 
@@ -127,6 +145,45 @@ public class TrackerApplication extends Application {
         AppDataStorage s = SDKGlobals.getAppDataStorage();
 
         return s.getUserHasClaimedDevices();
+    }
+
+
+    private class RegisterGcmTask extends AsyncTask<Context, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Context... context) {
+
+            GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context[0]);
+            try {
+                InstanceID instanceID = InstanceID.getInstance(context[0]);
+
+                // http://stackoverflow.com/questions/26718115/gcm-error-not-registered
+                //instanceID.deleteInstanceID();
+                //instanceID = InstanceID.getInstance(MainActivity.this);
+
+                String regId = instanceID.getToken("89383110802",
+                        GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+
+                GcmPubSub pubSub = GcmPubSub.getInstance(context[0]);
+                pubSub.subscribe(regId, "/topics/bpt", null);
+
+
+                _log.i("GCM registration token = " + regId);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {}
+
+        @Override
+        protected void onPreExecute() {}
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
     }
 
 

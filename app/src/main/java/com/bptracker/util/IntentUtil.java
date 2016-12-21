@@ -11,7 +11,8 @@ import com.bptracker.Manifest;
 public class IntentUtil {
 
     /**
-     * This broadcast action forwards incoming device events from the particle.io cloud
+     * This broadcast action forwards incoming device events from the particle.io cloud or
+     * push notifications from GCM
      *
      * Extras: EXTRA_FROM_BPT_DEVICE, EXTRA_DEVICE_ID, EVENT_NAME, EXTRA_EVENT_DATA,
      *         EXTRA_DEVICE_NAME
@@ -89,6 +90,10 @@ public class IntentUtil {
     // The BptApi Function
     public static final String EXTRA_FUNCTION = "com.bpt.intent.extra.FUNCTION";
 
+
+    // Parcelable type io.particle.android.sdk.cloud.ParticleEvent
+    public static final String EXTRA_PARTICLE_EVENT  = "com.bpt.intent.extra.PARTICLE_EVENT";
+
     // int datatype? TODO
     public static final String EXTRA_FUNCTION_RESULT = "com.bpt.intent.extra.FUNCTION_RESULT";
 
@@ -106,7 +111,7 @@ public class IntentUtil {
     // the particle.io assigned device ID
     public static final String EXTRA_DEVICE_ID = "com.bpt.intent.extra.DEVICE_ID";
 
-    // Is the event originating from the device loaded with the BPT firmware?
+    // Is the event originating from the device loaded with the BPT firmware? TODO: boolean?
     public static final String EXTRA_FROM_BPT_DEVICE = "com.bpt.intent.extra.FROM_BPT_DEVICE";
 
     // Holds the Firmware.Event type (if applicable)
