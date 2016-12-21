@@ -3,6 +3,7 @@ package com.bptracker;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.widget.Toolbar;
@@ -10,7 +11,17 @@ import android.widget.Toolbar;
 import com.bptracker.data.LocationProvider;
 import com.bptracker.fragment.DeviceListFragment;
 import com.bptracker.service.DeviceEventService;
+import com.bptracker.util.IntentUtil;
 import com.bptracker.util.Utils;
+import com.google.android.gms.gcm.GcmPubSub;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import io.particle.android.sdk.utils.TLog;
 
@@ -20,6 +31,9 @@ public class MainActivity extends Activity
 
 
     private LocationProvider locationProvider;
+
+
+
 
 
     @Override
@@ -36,23 +50,24 @@ public class MainActivity extends Activity
        //         new LoadDevicesTask(this));
 
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tb_device_list);
         setActionBar(toolbar);
 
 
+        /*
         //TODO: this should probably be executed from an AlarmBroadcastReceiver
         if (!Utils.isServiceRunning(DeviceEventService.class, this)) {
             _log.d("DeviceEventService is not running, launching service");
             Intent i = new Intent(this, DeviceEventService.class);
             startService(i);
         }
+        */
 
         TrackerApplication app = (TrackerApplication) this.getApplicationContext();
 
         if(!app.hasLocationPermission()){
             app.requestLocationPermission(this);
         }
-
 
         /*
         Intent i = new Intent(this, DeviceLocationActivity.class);
@@ -90,11 +105,12 @@ public class MainActivity extends Activity
 
     // DeviceListFragment.Callbacks
     @Override
-    public void onDeviceSelected(Uri deviceUri) {
+    public void onDeviceSelected(Uri deviceUri, String name) {
         _log.d("onDeviceSelected " + deviceUri.toString());
         // TODO: ...
 
         Intent intent = new Intent(this, DeviceActivity.class).setData(deviceUri);
+        intent.putExtra(IntentUtil.EXTRA_DEVICE_NAME, name);
         startActivity(intent);
     }
 
