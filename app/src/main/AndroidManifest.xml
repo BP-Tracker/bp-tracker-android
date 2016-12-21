@@ -4,12 +4,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/> -->
 
     <uses-permission android:name="com.bptracker.permission.RECEIVE_EVENTS" />
     <uses-permission android:name="com.bptracker.permission.RECEIVE_DEVICE_EVENTS" />
     <uses-permission android:name="com.bptracker.permission.RUN_DEVICE_FUNCTION" />
+    <uses-permission android:name="com.bptracker.permission.C2D_MESSAGE" />
+
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
 
     <uses-feature android:name="android.hardware.location.gps" />
 
@@ -17,6 +22,11 @@
     https://github.com/codepath/android_guides/wiki/Starting-Background-Services
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     -->
+
+
+    <!-- For Google Cloud Messaging service -->
+    <permission android:name="com.bptracker.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
 
 
     <!--
@@ -91,16 +101,18 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.bptracker.intent.action.LOAD_DEVICES" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
         <service
             android:name=".service.RunFunctionService"
             android:exported="false" />
+
         <service
             android:name=".service.DeviceEventService"
-            android:exported="false"
-            android:singleUser="true" />
+            android:exported="false" /> <!-- TODO: android:singleUser="true" -->
+
         <service
             android:name=".service.ExternalService"
             android:exported="true"
@@ -131,6 +143,35 @@
             </intent-filter>
         </receiver>
 
+
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.bptracker" />
+            </intent-filter>
+        </receiver>
+
+
+        <service
+            android:name=".service.GcmPushService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+
+
+        <service
+            android:name=".service.GcmTokenService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+
+
         <!--
         <receiver android:name=".service.LoadDevicesService$TestReceiver">
             <intent-filter>
@@ -159,7 +200,10 @@
 
         <activity
             android:name=".DeviceLocationActivity"
-            android:label="@string/title_activity_device_location"></activity>
+            android:label="@string/title_activity_device_location" />
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
     </application>
 
 </manifest>
