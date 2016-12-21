@@ -2,6 +2,20 @@ Change Log
 ==========
 Changes are documented here.
 
+[v0.0.4] - Dec 21, 2016
+### Added
+  - Google Maps integration
+  - Google Cloud Messaging integration
+  - Import android-gauge-library
+
+### Upated
+  - LoadDevicesService now sends a local broadcast once the devices are loaded
+  - change theme to Theme.Design.Light
+
+### Removed
+  - v4 support library
+  - LoadDevicesTask (moved into a Service class)
+
 
 [v0.0.3] - Dec 4, 2016
 -------------------------
@@ -36,5 +50,6 @@ Changes are documented here.
   - Renamed provider class names
 
 
+[v0.0.4]: https://github.com/BP-Tracker/bp-tracker-android/releases/tag/v0.0.4
 [v0.0.3]: https://github.com/BP-Tracker/bp-tracker-android/releases/tag/v0.0.3
 [v0.0.2]: https://github.com/BP-Tracker/bp-tracker-android/releases/tag/v0.0.2
