@@ -49,7 +49,7 @@
         android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
         android:popupTheme="@android:style/Theme.Material.Light"
         android:minHeight="?android:attr/actionBarSize"
-        android:id="@+id/toolbar" />
+        android:id="@+id/tb_device_list" />
 
     <fragment
         android:id="@+id/fragment_device_list"
