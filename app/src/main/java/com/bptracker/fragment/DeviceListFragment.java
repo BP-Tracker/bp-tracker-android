@@ -39,7 +39,7 @@ public class DeviceListFragment extends Fragment
 
     // when a device is selected
     public interface Callbacks {
-        void onDeviceSelected(Uri deviceUri);
+        void onDeviceSelected(Uri deviceUri, String deviceName);
     }
 
     @Override
@@ -72,11 +72,12 @@ public class DeviceListFragment extends Fragment
 
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 long id = cursor.getLong(COL_DEVICE_ENTRY_ID);
+                String name = cursor.getString(COL_DEVICE_NAME);
                 if (cursor != null) {
                     _log.v("Device entry ID = " + id);
 
                     ((Callbacks) getActivity())
-                            .onDeviceSelected(BptContract.DeviceEntry.buildDeviceUri(id));
+                            .onDeviceSelected(BptContract.DeviceEntry.buildDeviceUri(id), name);
                 }
             }
         });
