@@ -96,9 +96,9 @@ public class BptApi {
         /**
          * Receives function results and incoming device events during a function call. This allows
          * implementors a chance to listen for an event that is known to be returned from the call.
-         * Once the event is received this method must return true to indicate it's
+         * Once the event is received this method must a non-null String to indicate it's
          * finished. The class will then automatically unregister the receiver.
-         * Return false when the event is not the right one and before returning true invoke
+         * Return null when the event is not the right one and before returning true invoke
          * completeCall.
          *
          * Notes:
