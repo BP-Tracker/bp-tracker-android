@@ -1,2 +1,3 @@
-include ':app', ':cloudsdk'
+include ':app', ':cloudsdk', ':bpt-gauges'
 project(':cloudsdk').projectDir = new File('libs/spark-sdk-android/cloudsdk')
+project(':bpt-gauges').projectDir = new File('libs/android-gauge-library/bpt-gauges')
