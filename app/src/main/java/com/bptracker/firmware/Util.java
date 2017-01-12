@@ -20,7 +20,7 @@ public class Util {
 
     /**
      * Strips the event code from data in a bpt:event event and returns the rest.
-     * Firmware result format: event_code,ack_required[,data1[,data2..]].
+     * Firmware format: event_code,ack_required[,data1[,data2..]].
      * @param eventName Event name
      * @param eventData Event data in its raw form
      * @throws IllegalArgumentException

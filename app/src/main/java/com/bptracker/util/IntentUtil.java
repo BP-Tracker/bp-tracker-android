@@ -18,10 +18,7 @@ public class IntentUtil {
      *         EXTRA_DEVICE_NAME
      *
      *
-     * NB: do not abort this broadcast or use a filter priority of -100 or lower, otherwise the
-     *       broadcasts may not arrive.
-     *
-     * URI format: content://com.bptracker/events/[event_id]
+     * URI format: content://com.bptracker/events/[event_id] TODO: change
      */
     @RequiresPermission(Manifest.permission.RECEIVE_DEVICE_EVENTS)
     public static final String ACTION_DEVICE_EVENT = "com.bptracker.intent.action.DEVICE_EVENT";

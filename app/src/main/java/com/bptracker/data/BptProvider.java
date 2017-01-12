@@ -32,6 +32,7 @@ public class BptProvider extends ContentProvider {
     private static final UriMatcher uriMatcher;
     private static final SQLiteQueryBuilder deviceQueryBuilder;
     private static final SQLiteQueryBuilder bptEventQueryBuilder;
+    private static final SQLiteQueryBuilder allEventQueryBuilder;
     private static final SQLiteQueryBuilder bptFunctionCallQueryBuilder;
 
 
@@ -47,14 +48,21 @@ public class BptProvider extends ContentProvider {
     private static final int MATCHER_BPT_FUNCTION_CALLS = 107;
     private static final int MATCHER_BPT_FUNCTION_CALLS_ID = 108;
 
-    private static final int MATCHER_BY_EVENT_ID = 109;
-    private static final int MATCHER_BY_FUNCTION_CALLS_ID = 110;
+    private static final int MATCHER_BY_EVENT_DEVICE_ID = 109;
+    private static final int MATCHER_BY_EVENT_ID = 110; //NB: not supported yet
+    private static final int MATCHER_BY_FUNCTION_CALLS_ID = 111;
 
 
     static{
         deviceQueryBuilder = new SQLiteQueryBuilder();
         deviceQueryBuilder.setTables(DeviceEntry.TABLE_NAME);
 
+        // all events from particle cloud
+        allEventQueryBuilder = new SQLiteQueryBuilder();
+        allEventQueryBuilder.setTables(DeviceEventEntry.TABLE_NAME);
+
+
+        // events from bpt firmware only
         bptEventQueryBuilder = new SQLiteQueryBuilder();
         bptEventQueryBuilder.setTables(
                 DeviceEventEntry.TABLE_NAME + " INNER JOIN valid_bpt_function" +
@@ -83,7 +91,8 @@ public class BptProvider extends ContentProvider {
          //devices/*/bpt-function-calls/#  (specific btp function call)
 
          //devices/*                       (device by internal id)
-         //events/*                        (event by id)
+         //events/event-id/*               (event by id) //TODO
+         //events/*/*/*                    (event by cloud device id/event name/event id)
          //function-calls/*                (function call by id)
 
         uriMatcher.addURI(auth, "devices", MATCHER_DEVICES);
@@ -97,7 +106,11 @@ public class BptProvider extends ContentProvider {
         uriMatcher.addURI(auth, "devices/*/bpt-function-calls/*", MATCHER_BPT_FUNCTION_CALLS_ID);
 
         uriMatcher.addURI(auth, "devices/*", MATCHER_BY_DEVICE_ID);
-        uriMatcher.addURI(auth, "events/*", MATCHER_BY_EVENT_ID);
+
+        //uriMatcher.addURI(auth, "events/event-id/*", MATCHER_BY_EVENT_ID); //TODO: support and test
+        uriMatcher.addURI(auth, "events/*/*/*", MATCHER_BY_EVENT_DEVICE_ID);
+
+
         uriMatcher.addURI(auth, "function-calls/*", MATCHER_BY_FUNCTION_CALLS_ID);
     }
 
@@ -235,17 +248,21 @@ public class BptProvider extends ContentProvider {
         return c;
     }
 
-    private Cursor queryBptEvent(Uri uri, String[] projection, String selection,
+
+    // for /events/*/*/* or devices/*/bpt-events/* URIs
+    private Cursor queryEvent(Uri uri, String[] projection, String selection,
                                      String[] selectionArgs, String sortOrder){
 
         int match = uriMatcher.match(uri);
 
-        if(match != MATCHER_BPT_EVENTS && match != MATCHER_BPT_EVENTS_ID){
+        if(match != MATCHER_BPT_EVENTS && match != MATCHER_BPT_EVENTS_ID
+                && match != MATCHER_BY_EVENT_DEVICE_ID){
             throw new UnsupportedOperationException("URI not supported: " + uri);
         }
 
 
         String cloudDeviceId = DeviceEventEntry.getCloudDeviceIdFromUri(uri);
+
         if ( TextUtils.isEmpty( cloudDeviceId ) ) {
             throw new UnsupportedOperationException(
                     "Cannot find cloud device ID from uri:" + uri);
@@ -254,16 +271,15 @@ public class BptProvider extends ContentProvider {
         ArrayList<String> sArgs = selectionArgs != null
                 ? new ArrayList<String>(Arrays.asList(selectionArgs)) : new ArrayList<String>();
 
+        StringBuffer buffer = new StringBuffer(selection != null ? selection.length() : 0);
 
-
-        StringBuffer buffer = new StringBuffer(selection);
 
         if(!TextUtils.isEmpty(selection)){
             buffer.append(" and ");
         }
 
 
-        if(match == MATCHER_BPT_EVENTS_ID){
+        if(match == MATCHER_BPT_EVENTS_ID || match == MATCHER_BY_EVENT_DEVICE_ID){
             long id = DeviceEventEntry.getIdFromUri(uri);
             if(id < 0){
                 throw new UnsupportedOperationException("URI is missing function call id:  " + uri);
@@ -272,7 +288,7 @@ public class BptProvider extends ContentProvider {
             sArgs.add(Long.toString(id));
 
             buffer.append(" " + DeviceEventEntry.TABLE_NAME + "."
-                    + DeviceEventEntry._ID + " = ? and");
+                    + DeviceEventEntry._ID + " = ? and ");
 
         }
 
@@ -280,8 +296,12 @@ public class BptProvider extends ContentProvider {
         buffer.append(DeviceEventEntry.TABLE_NAME +
                 "." + DeviceEventEntry.COLUMN_CLOUD_DEVICE_ID + " = ? ");
 
+        SQLiteQueryBuilder b = match == MATCHER_BY_EVENT_DEVICE_ID
+                ? allEventQueryBuilder : bptEventQueryBuilder;
 
-        Cursor c = bptEventQueryBuilder.query(databaseHelper.getReadableDatabase(),
+
+        //_log.d("String = " + buffer.toString() + " [" + sArgs.get(0) + " " + sArgs.get(1) + "] );
+        Cursor c = b.query(databaseHelper.getReadableDatabase(),
                 projection,
                 buffer.toString(),
                 sArgs.toArray(new String[sArgs.size()]),
@@ -326,9 +346,10 @@ public class BptProvider extends ContentProvider {
            c = queryBptFunctionCall(uri, projection, selection, selectionArgs, sortOrder);
 
         }else if(match == MATCHER_BPT_EVENTS
-                || match == MATCHER_BPT_EVENTS_ID) {
+                || match == MATCHER_BPT_EVENTS_ID
+                || match == MATCHER_BY_EVENT_DEVICE_ID) {
 
-            c = queryBptEvent(uri, projection, selection, selectionArgs, sortOrder);
+            c = queryEvent(uri, projection, selection, selectionArgs, sortOrder);
 
         }else if(match == MATCHER_BY_DEVICE_ID
                 || match == MATCHER_BY_CLOUD_DEVICE_ID){
@@ -372,6 +393,8 @@ public class BptProvider extends ContentProvider {
                 return DeviceFunctionCallEntry.CONTENT_ITEM_TYPE;
             case MATCHER_BY_EVENT_ID:
                 return DeviceEventEntry.CONTENT_ITEM_TYPE;
+            case MATCHER_BY_EVENT_DEVICE_ID:
+                return DeviceEventEntry.CONTENT_ITEM_TYPE;
             case MATCHER_BY_FUNCTION_CALLS_ID:
                 return DeviceFunctionCallEntry.CONTENT_ITEM_TYPE;
             default:
@@ -397,11 +420,23 @@ public class BptProvider extends ContentProvider {
                 break;
             }
             case MATCHER_EVENTS : {
+
+                String cloudDeviceId = values.getAsString(DeviceEventEntry.COLUMN_CLOUD_DEVICE_ID);
+                String eventName = values.getAsString(DeviceEventEntry.COLUMN_EVENT_NAME);
+
+                if (TextUtils.isEmpty(cloudDeviceId) || TextUtils.isEmpty(eventName)) {
+                    throw new android.database.SQLException("Cannot insert row into " + uri
+                        + " because COLUMN_CLOUD_DEVICE_ID and/or COLUMN_EVENT_NAME is missing");
+                }
+
                 long _id = db.insert(DeviceEventEntry.TABLE_NAME, null, values);
-                if ( _id > 0 )
-                    returnUri = DeviceEventEntry.buildDeviceEventUri(_id);
-                else
+                if ( _id > 0 ) {
+                    returnUri = DeviceEventEntry.buildDeviceEventUri(cloudDeviceId, _id, eventName);
+                    uri = returnUri; //TODO: is this right?
+                }else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+
                 break;
             }
             case MATCHER_FUNCTION_CALLS: {

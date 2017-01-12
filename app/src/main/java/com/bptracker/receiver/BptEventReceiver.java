@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
+import com.bptracker.DeviceActivity;
 import com.bptracker.R;
 import com.bptracker.SelectStateActivity;
 import com.bptracker.data.LocationProvider;
@@ -56,7 +57,7 @@ public class BptEventReceiver extends BroadcastReceiver {
                 String title = deviceName + " raised a panic alarm";
                 String message = "The last update was recorded at 5:30pm";
 
-                EventNotification n = new EventNotification(context, title, message);
+                EventNotification n = new EventNotification(context, title, message, DeviceActivity.class);
                 n.sendPanic(deviceId, deviceName, lat, lon);
 
                 break;

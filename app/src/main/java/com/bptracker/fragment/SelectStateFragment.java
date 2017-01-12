@@ -79,7 +79,7 @@ public class SelectStateFragment extends DialogFragment {
 
         List<Pair<Firmware.State, String>> states = new ArrayList<>(2);
         states.add(new Pair<Firmware.State, String>(Firmware.State.DISARMED, "Temporarily"));
-        states.add(new Pair<Firmware.State, String>(Firmware.State.DEACTIVATED, "Until manual reactivation"));
+        states.add(new Pair<Firmware.State, String>(Firmware.State.STOPPED, "Until manual reactivation"));
 
 
         mAdapter = new StateAdapter(this.getActivity(),
@@ -92,7 +92,7 @@ public class SelectStateFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
             //new CharSequence[]{"Temporaily", "Until resumed"}
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.DialogTheme);
         builder.setTitle("Disarm");
 
         builder.setAdapter(mAdapter, new DialogInterface.OnClickListener() {

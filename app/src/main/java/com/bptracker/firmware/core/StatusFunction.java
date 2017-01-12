@@ -7,11 +7,12 @@ import android.support.annotation.Nullable;
 
 import com.bptracker.firmware.Firmware;
 import com.bptracker.firmware.Firmware.CloudEvent;
+import com.bptracker.firmware.Util;
 
 import io.particle.android.sdk.cloud.ParticleEvent;
 
 /**
- * Author: Derek Benda
+ * TODO: support optional arguments
  */
 
 public class StatusFunction extends Function {
@@ -43,8 +44,14 @@ public class StatusFunction extends Function {
             return null;
         }
 
-        if(eventName == CloudEvent.BPT_STATUS ){
-            return event.dataPayload;
+        if(Util.isBptEvent(name)) {  // Listen for the bpt:event STATUS_UPDATE event
+            Firmware.EventType type = Util.getBptEventType(name, event.dataPayload);
+
+            if (type == Firmware.EventType.STATUS_UPDATE) {
+
+                String data = Util.getBptEventData(name, event.dataPayload);
+                return data;
+            }
         }
 
         return null;

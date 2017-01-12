@@ -31,7 +31,7 @@ public class BootCompletedReceiver extends BroadcastReceiver {
             _log.d("onReceive called for Intent ACTION_BOOT_COMPLETED");
 
             TrackerApplication app = (TrackerApplication) context.getApplicationContext();
-            app.registerGcmService();
+            app.registerGcmService(false);
 
             /*
             Intent i = new Intent(context, DeviceEventService.class);

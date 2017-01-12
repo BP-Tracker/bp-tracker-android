@@ -47,9 +47,7 @@
             gauge:titleTextRadius="73dp"
             gauge:titleTextSize="15sp"
             gauge:animation="true"
-            gauge:additionalLabel="CHARGE CYCLE"
-            gauge:additionalValue=""
-            gauge:progressLabel="RESERVE"
+            gauge:progressLabel="CHARGE"
             gauge:gaugeLevel="100"
             gauge:foregroundStartColor="#125D9D"
             gauge:foregroundEndColor="#125D9D" />
@@ -61,21 +59,24 @@
             gauge:foregroundEndColor="#de4904"
             -->
         <com.bptracker.ui.gauges.GradientCircleGauge
-            android:id="@+id/gcg_signal_gauge"
+            android:id="@+id/gcg_tracker_gauge"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             gauge:animation="true"
             gauge:backgroundVisible="false"
-            gauge:titleText="Signal Strength"
+            gauge:titleText="Tracker"
+            gauge:additionalLabel="DISABLED"
+            gauge:additionalValue=""
             gauge:backgroundColor="#e1e1e1"
-            gauge:progressLabel="HEALTH"
+            gauge:progressLabel="SIGNAL"
             gauge:gaugeLevel="100"
             gauge:titleTextSize="15sp" />
 
     </LinearLayout>
 
     <!--style="@style/BPTrackerButton"-->
+
     <Button
         android:layout_height="48dp"
         android:layout_width="256dp"

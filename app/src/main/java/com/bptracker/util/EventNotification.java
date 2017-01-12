@@ -7,10 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 
+import com.bptracker.DeviceActivity;
 import com.bptracker.DeviceLocationActivity;
 import com.bptracker.MainActivity;
 import com.bptracker.R;
 import com.bptracker.SelectStateActivity;
+import com.bptracker.data.BptContract;
 import com.google.android.gms.maps.model.LatLng;
 
 
@@ -23,18 +25,18 @@ public class EventNotification {
 
     public EventNotification(Context context, String title, String message) {
         init(context, title, message);
-        this.mActivityToCall = MainActivity.class;
+        mActivityToCall = MainActivity.class;
     }
 
     public EventNotification(Context context, String title, String message, Class<? extends Activity> activityToCall) {
         init(context, title, message);
-        this.mActivityToCall = activityToCall;
+        mActivityToCall = activityToCall;
     }
 
     private void init(Context context, String title, String message) {
-        this.mContext = context;
-        this.mTitleMessage = title;
-        this.mTextMessage = message;
+        mContext = context;
+        mTitleMessage = title;
+        mTextMessage = message;
     }
 
     public void sendPanic(String cloudDeviceId, String deviceName, double lat, double lon){
@@ -44,6 +46,13 @@ public class EventNotification {
 
 
         Intent i = new Intent(mContext, mActivityToCall);
+
+        if (mActivityToCall == DeviceActivity.class) {
+            i.setData(BptContract.DeviceEntry.buildCloudDeviceUri(cloudDeviceId));
+            i.putExtra(IntentUtil.EXTRA_DEVICE_NAME, deviceName);
+        }
+
+
         //i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 

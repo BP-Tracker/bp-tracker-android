@@ -24,6 +24,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.bptracker.R;
+import com.bptracker.SettingsActivity;
 import com.bptracker.TrackerApplication;
 import com.bptracker.adapter.DeviceListAdapter;
 import com.bptracker.data.BptContract;
@@ -37,8 +38,14 @@ public class DeviceListFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
 
 
-    // when a device is selected
     public interface Callbacks {
+
+        /**
+         * Called when a device is selected from the list
+         *
+         * @param deviceUri URI with the format: com.bptracker/devices/cloud-device-id/*
+         * @param deviceName The name of the device
+         */
         void onDeviceSelected(Uri deviceUri, String deviceName);
     }
 
@@ -71,14 +78,17 @@ public class DeviceListFragment extends Fragment
                 _log.v("onItemClick for device [position=" + position + "]");
 
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
-                long id = cursor.getLong(COL_DEVICE_ENTRY_ID);
-                String name = cursor.getString(COL_DEVICE_NAME);
-                if (cursor != null) {
-                    _log.v("Device entry ID = " + id);
+                String cloudDeviceId = cursor.getString(COL_CLOUD_DEVICE_ID);
 
-                    ((Callbacks) getActivity())
-                            .onDeviceSelected(BptContract.DeviceEntry.buildDeviceUri(id), name);
-                }
+                String name = cursor.getString(COL_DEVICE_NAME);
+
+                _log.v("Device entry ID = " + cursor.getLong(COL_DEVICE_ENTRY_ID));
+
+                // URI format: com.bptracker/devices/cloud-device-id/*
+                ((Callbacks) getActivity())
+                        .onDeviceSelected(
+                                BptContract.DeviceEntry.buildCloudDeviceUri(cloudDeviceId), name);
+
             }
         });
 
@@ -161,6 +171,13 @@ public class DeviceListFragment extends Fragment
         } else if (id == R.id.action_logout) {
             logoutAndRedirectToLogin();
             return true;
+        } else if (id == R.id.action_general_settings) {
+
+            Intent i = new Intent(this.getActivity(), SettingsActivity.class);
+            startActivity(i);
+
+            return true;
+
         }
 
        /* if (id == R.id.action_map) {

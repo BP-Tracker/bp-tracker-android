@@ -58,6 +58,7 @@ public class BptContract {
 
         // com.bptracker/devices/cloud-device-id/AFF21323123ACCBCEDFF
         public static String getCloudDeviceIdFromUri(Uri uri) {
+
             return uri.getPathSegments().get(2); //TODO: add checks here
         }
 
@@ -115,7 +116,7 @@ public class BptContract {
 
         //devices/*/bpt-function-calls/#
         public static String getCloudDeviceIdFromUri(Uri uri) {
-            return uri.getPathSegments().get(2);
+            return uri.getPathSegments().get(1); //TODO: test this
         }
 
         //devices/*/bpt-function-calls/#
@@ -173,9 +174,10 @@ public class BptContract {
         public static final String COLUMN_PUBLISH_DATE = "published";
 
 
-        //devices/*/bpt-events
+        //devices/*/bpt-events or //events/<cloud_device_id>/<event_name>/*
         public static String getCloudDeviceIdFromUri(Uri uri) {
-            return uri.getPathSegments().get(2);
+
+            return uri.getPathSegments().get(1);
         }
 
         //devices/*/bpt-events
@@ -194,18 +196,41 @@ public class BptContract {
             return ContentUris.withAppendedId(uri, deviceEventId);
         }
 
-        //devices/#
+        //events/*
         public static Uri buildDeviceEventUri(long deviceEventId) {
             return ContentUris.withAppendedId(CONTENT_URI, deviceEventId);
+        }
+
+        //events/<cloud_device_id>/<event_name>/*
+        public static Uri buildDeviceEventUri(String cloudDeviceId, long deviceEventId, String eventName) {
+
+            Uri uri = BASE_CONTENT_URI.buildUpon().appendPath("events")
+                    .appendPath(cloudDeviceId).appendPath(eventName).build();
+
+            return ContentUris.withAppendedId(uri, deviceEventId);
+        }
+
+        //events/<cloud_device_id>/<event_name>
+        public static Uri buildDeviceEventUri(String cloudDeviceId, String eventName) {
+
+            if (TextUtils.isEmpty(cloudDeviceId) || TextUtils.isEmpty(eventName)) {
+                throw new IllegalArgumentException("cloudDeviceId or eventName is empty or null");
+            }
+
+            Uri uri = BASE_CONTENT_URI.buildUpon().appendPath("events")
+                    .appendPath(cloudDeviceId).appendPath(eventName).build();
+
+            return uri;
         }
 
         //events
         public static Uri buildDeviceEventUri(){
             return CONTENT_URI;
-        }
+        } //TODO: remove?
 
         //devices/*/bpt-events/*
-        //events/*
+        //events/event-id/*
+        //events/<cloud_device_id>/<event_name>/*
         public static long getIdFromUri(Uri uri){
 
             String id = uri.getLastPathSegment();  //TODO: error prone

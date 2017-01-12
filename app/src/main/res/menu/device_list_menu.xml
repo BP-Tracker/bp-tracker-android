@@ -9,6 +9,10 @@
             android:checkable="false" />
     </group>
 
+
+    <item android:id="@+id/action_general_settings" android:title="@string/action_general_settings"
+        android:orderInCategory="1" app:showAsAction="never" />
+
     <group android:orderInCategory="2" android:id="@+id/group_logout" >
         <item android:id="@+id/action_logout" android:title="@string/action_logout"
             android:orderInCategory="1" app:showAsAction="never" />

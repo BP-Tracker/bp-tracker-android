@@ -7,11 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.preference.Preference;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.bptracker.firmware.core.BptApi;
+import com.bptracker.persistance.AppPreferences;
+import com.bptracker.persistance.DevicePreferences;
 import com.google.android.gms.gcm.GcmPubSub;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
@@ -29,6 +33,7 @@ public class TrackerApplication extends Application {
 
     public static final int REQUEST_PERMISSION_LOCATION = 1;
     private boolean mHasRegisteredGcm;
+    private AppPreferences mAppPreferences;
 
     @Override
     public void onCreate() {
@@ -38,16 +43,36 @@ public class TrackerApplication extends Application {
         ParticleCloudSDK.init(this);
         BptApi.init(this);
 
-        registerGcmService();
+        mAppPreferences = new AppPreferences(this);
+
+        _log.d("is GCM enabled: " + mAppPreferences.isGcmEnabled());
+
+        if (mAppPreferences.isGcmEnabled()) {
+            registerGcmService(false);
+        }
+
     }
 
     //TODO: is this the right place to register for GCM notifications?
-    public void registerGcmService(){
-        if (!mHasRegisteredGcm) {
+    public boolean registerGcmService(boolean reRegister){
+        _log.i("Registering GCM service");
+
+        if (!mHasRegisteredGcm || reRegister) {
             RegisterGcmTask task = new RegisterGcmTask();
             task.execute(this);
             mHasRegisteredGcm = true;
         }
+        return true;
+    }
+
+    public void deregisterGcmService(){
+        _log.i("De-registering GCM service");
+        if (!mHasRegisteredGcm) {
+            return;
+        }
+
+        //TODO
+        mHasRegisteredGcm = false;
     }
 
 
@@ -147,29 +172,69 @@ public class TrackerApplication extends Application {
         return s.getUserHasClaimedDevices();
     }
 
+    public Preference getDevicePreference(String cloudDeviceId, String key) {
 
-    private class RegisterGcmTask extends AsyncTask<Context, Void, Void> {
+        //TODO
+        return null;
+    }
+
+
+    public AppPreferences getPreferences(){
+        return mAppPreferences;
+    }
+
+
+    public DevicePreferences getDevicePreferences(String cloudDeviceId) {
+        if (TextUtils.isEmpty(cloudDeviceId)) {
+            throw new IllegalArgumentException("cloudDeviceId is null or an empty string");
+        }
+
+        return new DevicePreferences(this, cloudDeviceId);
+    }
+
+    /*
+    public Preference getPreference(String key){
+
+        //TODO
+        return null;
+    }
+
+    public void setPreference(String key, String value) { //TODO
+
+    }
+
+    public void setDevicePreference(String cloudDeviceId, String key, String value) {
+
+    }
+    */
+
+    //TODO: error handling
+    private static class RegisterGcmTask extends AsyncTask<Context, Void, Void> {
 
         @Override
-        protected Void doInBackground(Context... context) {
+        protected Void doInBackground(Context... ctx) {
 
-            GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context[0]);
+            Context context = ctx[0];
+            TrackerApplication app = (TrackerApplication) context.getApplicationContext();
+
+            GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
             try {
-                InstanceID instanceID = InstanceID.getInstance(context[0]);
+                InstanceID instanceID = InstanceID.getInstance(context);
 
                 // http://stackoverflow.com/questions/26718115/gcm-error-not-registered
                 //instanceID.deleteInstanceID();
                 //instanceID = InstanceID.getInstance(MainActivity.this);
 
-                String regId = instanceID.getToken("89383110802",
-                        GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+                String senderId = app.getPreferences().getGcmSenderId();
+                String regId = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-                GcmPubSub pubSub = GcmPubSub.getInstance(context[0]);
+                GcmPubSub pubSub = GcmPubSub.getInstance(context);
                 pubSub.subscribe(regId, "/topics/bpt", null);
 
 
                 _log.i("GCM registration token = " + regId);
             } catch (IOException e) {
+                _log.e("Could not register with GCM: " + e.getMessage());
                 e.printStackTrace();
             }
 

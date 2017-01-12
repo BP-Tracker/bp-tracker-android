@@ -80,7 +80,7 @@ public class SelectStateActivity extends Activity
                 _log.i("got results");
 
                 Function f = intent.getParcelableExtra(IntentUtil.EXTRA_FUNCTION);
-                String r = intent.getStringExtra(IntentUtil.EXTRA_FUNCTION_RESULT);
+                int r = intent.getIntExtra(IntentUtil.EXTRA_FUNCTION_RESULT, -1);
 
                 _log.i(f.getUri() + " " + r);
 

@@ -17,7 +17,7 @@ public class Firmware { /** TODO: double check all codes **/
     public enum State {
 
         OFFLINE(1, false),
-        DEACTIVATED(2, false),
+        STOPPED(2, false),
         RESET(3, false),
         ARMED(4, false),
         DISARMED(5, false),
@@ -79,8 +79,9 @@ public class Firmware { /** TODO: double check all codes **/
         PROBE_CONTROLLER(7),
         TEST(8),
         SERIAL_COMMAND(9),
-        ERROR(10),
-        HARDWARE_FAULT(11);
+        STATUS_UPDATE(10),
+        ERROR(11),
+        HARDWARE_FAULT(12);
 
 
         public int getCode(){
@@ -102,6 +103,39 @@ public class Firmware { /** TODO: double check all codes **/
         static {
             for(EventType e : EventType.values()){
                 map.put(e.code, e);
+            }
+        }
+    }
+
+
+
+    @SuppressWarnings({"UnusedDeclaration"})
+    public enum ControllerMode {
+
+        CONTROLLER_MODE_NORMAL(1),
+        CONTROLLER_MODE_HIGH_SPEED(2),
+        CONTROLLER_MODE_TEST(3);
+
+
+        public int getMode(){
+            return this.mode;
+        }
+
+        public static ControllerMode fromMode(int mode){
+            return map.get(mode);
+        }
+
+        private int mode;
+
+        ControllerMode(int mode){
+            this.mode = mode;
+        }
+
+        private static SparseArray<ControllerMode> map = new SparseArray<>();
+
+        static {
+            for(ControllerMode e : ControllerMode.values()){
+                map.put(e.mode, e);
             }
         }
     }

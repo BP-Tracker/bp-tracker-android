@@ -17,6 +17,9 @@
 
     </style>
 
+    <!-- http://stackoverflow.com/questions/38341207/android-alertdialog-exception-resourcesnotfoundexception -->
+    <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert" />
+
     <style name="AppTheme.Transparent">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
