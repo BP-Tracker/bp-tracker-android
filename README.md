@@ -33,10 +33,10 @@ Launch Android Studio to compile and deploy the app.
 Screenshots
 -----
 
-<img width="200px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-device-list.png" alt="List screenshot" />
-<img width="179px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-status.png" alt="Status screenshot" />
-<img width="190px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-alert.png" alt="Alert screenshot" />
-<img width="191px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-settings.png" alt="Settings screenshot" />
+<img width="200px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/master/docs/images/android-device-list.png" alt="List screenshot" />
+<img width="179px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/master/docs/images/android-status.png" alt="Status screenshot" />
+<img width="190px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/master/docs/images/android-alert.png" alt="Alert screenshot" />
+<img width="191px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/master/docs/images/android-settings.png" alt="Settings screenshot" />
 
 
 
