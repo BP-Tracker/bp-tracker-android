@@ -1,7 +1,7 @@
 BP Tracker Android
 ==========
 
-An android client for monitoring and tracking assets such as a motorcycle.
+An android client for monitoring and tracking a motorcycle.
 
 
 [![Build Unstable][shield-unstable]](#)
@@ -12,44 +12,33 @@ An android client for monitoring and tracking assets such as a motorcycle.
 Table Of Contents
 -----------------
 
-- [Intro](#intro)
-- [Features](#features)
 - [Requirements](#requirements)
 - [Usage](#usage)
-- [Support & Releases](#support-&-releases)
-- [TODO](#todo)
+- [Screenshots](#screenshots)
 - [License](#license)
-
-Intro
--------
-
-
-Features
--------
 
 
 Requirements
 -------
-BP Tracker requires the following hardware:
+  * BP Tracker [firmware][bp-tracker-particle] 0.2+
+  * [Android Studio][android-studio]
+  * Android smartphone running Lolliop (v5.0) or higher
 
-  * particle.io [electron][electron] core (tested with 0.5.3 firmware)
-  * [AssetTracker][assetrackershield] shield (tested with v002)
-  * [particle cli][particlecli]
 
 Usage
 -----
+Launch Android Studio to compile and deploy the app.
 
 
-Support and Releases
+Screenshots
 -----
 
-No releases yet.
+<img width="200px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-device-list.png" alt="List screenshot" />
+<img width="179px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-status.png" alt="Status screenshot" />
+<img width="190px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-alert.png" alt="Alert screenshot" />
+<img width="191px" src="https://rawgit.com/BP-Tracker/bp-tracker-android/masterdocs/images/android-settings.png" alt="Settings screenshot" />
 
 
-Todo
------
-
-  Use particle.io's cloudsdk after SSE issue has been resolved (https://github.com/spark/spark-sdk-android/issues/10)
 
 
 License
@@ -62,9 +51,6 @@ Copyright &copy; 2016 Derek Benda
 [shield-unstable]: https://img.shields.io/badge/build-unstable-red.svg
 [shield-license]: https://img.shields.io/badge/license-MIT-blue.svg
 
-[particlecli]:https://docs.particle.io/guide/getting-started/connect/electron/
-[particleio]: https://www.particle.io/
-[electron]: https://www.particle.io/products/hardware/electron-cellular-dev-kit
-[cloudapi]: https://docs.particle.io/reference/api/
-[assetrackershield]: https://docs.particle.io/datasheets/particle-shields/#electron-asset-tracker
+[bp-tracker-particle]:https://github.com/BP-Tracker/bp-tracker-particle
+[android-studio]:https://developer.android.com/studio/index.html
 [info-license]: LICENSE
